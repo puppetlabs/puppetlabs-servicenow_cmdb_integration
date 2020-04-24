@@ -1,0 +1,10 @@
+<%- | String $snowinstance,
+      String $user,
+      String $password,
+      String $table
+| -%>
+---
+snowinstance: <%= $snowinstance %>
+user: <%= $user %>
+password: <%= $password %>
+table: <%= $table %>
