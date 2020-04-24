@@ -20,22 +20,7 @@ class servicenow_integration::trusted_external_command (
   Sensitive[String] $password,
   String $table
 ) {
-  $gem_build_dependencies = (
-    package { ['make', 'automake', 'gcc', 'gcc-c++', 'kernel-devel']:
-      ensure => present,
-    }
-  )
-
   $resource_dependencies = flatten([
-    ['puppet_gem', 'puppetserver_gem'].map |$provider| {
-      package { "${provider} cassandra-driver":
-        ensure   => present,
-        name     => 'cassandra-driver',
-        provider => $provider,
-        require  => $gem_build_dependencies,
-      }
-    },
-
     file { '/etc/puppetlabs/puppet/get-servicenow-node-data.rb':
       ensure => file,
       owner  => 'pe-puppet',
