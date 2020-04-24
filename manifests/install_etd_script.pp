@@ -36,12 +36,12 @@ class servicenow_integration::install_etd_script (
       }
     },
 
-    file { '/etc/puppetlabs/puppet/get_servicenow_node_data.rb':
+    file { '/etc/puppetlabs/puppet/get-servicenow-node-data.rb':
       ensure => file,
       owner  => 'pe-puppet',
       group  => 'pe-puppet',
       mode   => '0755',
-      source => 'puppet:///modules/servicenow_integration/get_servicenow_node_data.rb',
+      source => 'puppet:///modules/servicenow_integration/get-servicenow-node-data.rb',
     },
 
     file { '/etc/puppetlabs/puppet/snow_record.yaml':
@@ -62,7 +62,7 @@ class servicenow_integration::install_etd_script (
     ensure  => present,
     path    => '/etc/puppetlabs/puppet/puppet.conf',
     setting => 'trusted_external_command',
-    value   => '/etc/puppetlabs/puppet/get_servicenow_node_data.rb',
+    value   => '/etc/puppetlabs/puppet/get-servicenow-node-data.rb',
     section => 'master',
     require => $resource_dependencies,
   }
