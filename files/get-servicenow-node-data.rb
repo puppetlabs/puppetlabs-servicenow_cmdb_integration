@@ -39,7 +39,7 @@ class ServiceNowRequest
 end
 
 if $PROGRAM_NAME == __FILE__
-  config = YAML.load_file('/etc/puppetlabs/puppet/snow_record.yaml')
+  config = YAML.load_file('/etc/puppetlabs/puppet/servicenow.yaml')
 
   snowinstance = config['snowinstance']
   username     = config['user']

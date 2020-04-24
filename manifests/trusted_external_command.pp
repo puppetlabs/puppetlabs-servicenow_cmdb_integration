@@ -14,7 +14,7 @@
 # @param [String] password The password of the account used to query data from Servicenow
 # @param [String] table The table in Servicenow that will contain the required data
 # @param [String] sys_id :shrug:
-class servicenow_integration::install_etd_script (
+class servicenow_integration::trusted_external_command (
   String $snowinstance,
   String $user,
   Sensitive[String] $password,
@@ -44,12 +44,12 @@ class servicenow_integration::install_etd_script (
       source => 'puppet:///modules/servicenow_integration/get-servicenow-node-data.rb',
     },
 
-    file { '/etc/puppetlabs/puppet/snow_record.yaml':
+    file { '/etc/puppetlabs/puppet/servicenow.yaml':
       ensure  => file,
       owner   => 'pe-puppet',
       group   => 'pe-puppet',
       mode    => '0640',
-      content => epp('servicenow_integration/snow_record.yaml.epp', {
+      content => epp('servicenow_integration/servicenow.yaml.epp', {
         snowinstance => $snowinstance,
         user         => $user,
         password     => $password,
