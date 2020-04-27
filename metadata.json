@@ -7,16 +7,7 @@
   "source": "http://github.com/puppetlabs/puppetlabs-servicenow_integration",
   "project_page": "http://github.com/puppetlabs/puppetlabs-servicenow_integration",
   "issues_url": "http://github.com/puppetlabs/puppetlabs-servicenow_integration/issues",
-  "dependencies": [
-    {
-      "name": "puppetlabs/ruby_task_helper",
-      "version_requirement": ">= 0.3.0 <= 2.0.0"
-    },
-    {
-      "name": "puppetlabs/puppetserver_gem",
-      "version_requirement": ">= 1.0"
-    }
-  ],
+  "dependencies": [],
   "operatingsystem_support": [
     {
       "operatingsystem": "CentOS",

@@ -17,19 +17,32 @@
 class servicenow_integration::trusted_external_command (
   String $snowinstance,
   String $user,
-  Sensitive[String] $password,
+  String $password,
   String $table
 ) {
+  # Warning: These values are parameterized here at the top of this file, but the
+  # path to the yaml file is hard coded in the get-servicenow-node-data.rb script.
+  $puppet_base = '/etc/puppetlabs/puppet'
+  $external_commands_base = "${puppet_base}/trusted-external-commands"
+
   $resource_dependencies = flatten([
-    file { '/etc/puppetlabs/puppet/get-servicenow-node-data.rb':
-      ensure => file,
+
+    file { $external_commands_base:
+      ensure => directory,
       owner  => 'pe-puppet',
       group  => 'pe-puppet',
-      mode   => '0755',
-      source => 'puppet:///modules/servicenow_integration/get-servicenow-node-data.rb',
     },
 
-    file { '/etc/puppetlabs/puppet/servicenow.yaml':
+    file { "${external_commands_base}/get-servicenow-node-data.rb":
+      ensure  => file,
+      owner   => 'pe-puppet',
+      group   => 'pe-puppet',
+      mode    => '0755',
+      source  => 'puppet:///modules/servicenow_integration/get-servicenow-node-data.rb',
+      require => [File[$external_commands_base]],
+    },
+
+    file { "${puppet_base}/servicenow.yaml":
       ensure  => file,
       owner   => 'pe-puppet',
       group   => 'pe-puppet',
@@ -47,7 +60,7 @@ class servicenow_integration::trusted_external_command (
     ensure  => present,
     path    => '/etc/puppetlabs/puppet/puppet.conf',
     setting => 'trusted_external_command',
-    value   => '/etc/puppetlabs/puppet/get-servicenow-node-data.rb',
+    value   => "${external_commands_base}/get-servicenow-node-data.rb",
     section => 'master',
     require => $resource_dependencies,
   }
