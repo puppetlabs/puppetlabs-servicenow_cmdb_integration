@@ -14,42 +14,27 @@
 # @param [String] password The password of the account used to query data from Servicenow
 # @param [String] table The table in Servicenow that will contain the required data
 # @param [String] sys_id :shrug:
-class servicenow_integration::install_etd_script (
+class servicenow_integration::trusted_external_command (
   String $snowinstance,
   String $user,
   Sensitive[String] $password,
   String $table
 ) {
-  $gem_build_dependencies = (
-    package { ['make', 'automake', 'gcc', 'gcc-c++', 'kernel-devel']:
-      ensure => present,
-    }
-  )
-
   $resource_dependencies = flatten([
-    ['puppet_gem', 'puppetserver_gem'].map |$provider| {
-      package { "${provider} cassandra-driver":
-        ensure   => present,
-        name     => 'cassandra-driver',
-        provider => $provider,
-        require  => $gem_build_dependencies,
-      }
-    },
-
-    file { '/etc/puppetlabs/puppet/get_servicenow_node_data.rb':
+    file { '/etc/puppetlabs/puppet/get-servicenow-node-data.rb':
       ensure => file,
       owner  => 'pe-puppet',
       group  => 'pe-puppet',
       mode   => '0755',
-      source => 'puppet:///modules/servicenow_integration/get_servicenow_node_data.rb',
+      source => 'puppet:///modules/servicenow_integration/get-servicenow-node-data.rb',
     },
 
-    file { '/etc/puppetlabs/puppet/snow_record.yaml':
+    file { '/etc/puppetlabs/puppet/servicenow.yaml':
       ensure  => file,
       owner   => 'pe-puppet',
       group   => 'pe-puppet',
       mode    => '0640',
-      content => epp('servicenow_integration/snow_record.yaml.epp', {
+      content => epp('servicenow_integration/servicenow.yaml.epp', {
         snowinstance => $snowinstance,
         user         => $user,
         password     => $password,
@@ -62,7 +47,7 @@ class servicenow_integration::install_etd_script (
     ensure  => present,
     path    => '/etc/puppetlabs/puppet/puppet.conf',
     setting => 'trusted_external_command',
-    value   => '/etc/puppetlabs/puppet/get_servicenow_node_data.rb',
+    value   => '/etc/puppetlabs/puppet/get-servicenow-node-data.rb',
     section => 'master',
     require => $resource_dependencies,
   }
