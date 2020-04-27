@@ -41,13 +41,14 @@ end
 if $PROGRAM_NAME == __FILE__
   config = YAML.load_file('/etc/puppetlabs/puppet/servicenow.yaml')
 
-  snowinstance = config['snowinstance']
-  username     = config['user']
-  password     = config['password']
-  table        = config['table']
-  fqdn         = ARGV[0]
+  snowinstance    = config['snowinstance']
+  username        = config['user']
+  password        = config['password']
+  table           = config['table']
+  matching_column = config['matching_column']
+  certname        = ARGV[0]
 
-  uri = "https://#{snowinstance}.service-now.com/api/now/table/#{table}?fqdn=#{fqdn}"
+  uri = "https://#{snowinstance}.service-now.com/api/now/table/#{table}?#{matching_column}=#{certname}"
 
   request = ServiceNowRequest.new(uri, 'Get', nil, username, password)
   response = JSON.parse(request.print_response)['result'].reduce({}, :merge)

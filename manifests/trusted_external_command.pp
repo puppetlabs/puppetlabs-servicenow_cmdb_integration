@@ -18,7 +18,8 @@ class servicenow_integration::trusted_external_command (
   String $snowinstance,
   String $user,
   String $password,
-  String $table
+  String $table,
+  String $matching_column
 ) {
   # Warning: These values are parameterized here at the top of this file, but the
   # path to the yaml file is hard coded in the get-servicenow-node-data.rb script.
@@ -48,10 +49,11 @@ class servicenow_integration::trusted_external_command (
       group   => 'pe-puppet',
       mode    => '0640',
       content => epp('servicenow_integration/servicenow.yaml.epp', {
-        snowinstance => $snowinstance,
-        user         => $user,
-        password     => $password,
-        table        => $table
+        snowinstance    => $snowinstance,
+        user            => $user,
+        password        => $password,
+        table           => $table,
+        matching_column => $matching_column
       }),
     },
   ])
