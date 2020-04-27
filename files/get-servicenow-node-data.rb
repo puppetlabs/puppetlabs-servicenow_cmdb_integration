@@ -48,9 +48,14 @@ if $PROGRAM_NAME == __FILE__
   matching_column = config['matching_column']
   certname        = ARGV[0]
 
-  uri = "https://#{snowinstance}.service-now.com/api/now/table/#{table}?#{matching_column}=#{certname}"
+  uri = "https://#{snowinstance}.service-now.com/api/now/table/#{table}?#{matching_column}=#{certname}&sysparm_display_value=true"
 
   request = ServiceNowRequest.new(uri, 'Get', nil, username, password)
-  response = JSON.parse(request.print_response)['result'].reduce({}, :merge)
-  puts response.to_json
+
+  response = {
+    servicenow: JSON.parse(request.print_response)['result'][0]
+  }.to_json
+
+  puts response
+
 end
