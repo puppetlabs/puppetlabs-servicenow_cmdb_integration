@@ -9,16 +9,19 @@
 #
 # @example
 #   include servicenow_integration::puppetserver
-# @param [String] snowinstance The FQDN of the ServiceNow instance to query
+# @param [String] instance The FQDN of the ServiceNow instance to query
 # @param [String] user The username of the account with permission to query data
 # @param [String] password The password of the account used to query data from Servicenow
 # @param [String] table The table in Servicenow that will contain the required data
 # @param [String] sys_id :shrug:
 class servicenow_integration::trusted_external_command (
-  String $snowinstance,
+  String $instance,
   String $user,
   String $password,
-  String $table
+  String $certname_field    = 'fqdn',
+  String $table             = 'cmdb_ci',
+  String $classes_field     = 'u_puppet_classes',
+  String $environment_field = 'u_puppet_environment'
 ) {
   # Warning: These values are parameterized here at the top of this file, but the
   # path to the yaml file is hard coded in the get-servicenow-node-data.rb script.
@@ -48,10 +51,11 @@ class servicenow_integration::trusted_external_command (
       group   => 'pe-puppet',
       mode    => '0640',
       content => epp('servicenow_integration/servicenow.yaml.epp', {
-        snowinstance => $snowinstance,
-        user         => $user,
-        password     => $password,
-        table        => $table
+        instance       => $instance,
+        user           => $user,
+        password       => $password,
+        table          => $table,
+        certname_field => $certname_field
       }),
     },
   ])
