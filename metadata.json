@@ -7,7 +7,12 @@
   "source": "http://github.com/puppetlabs/puppetlabs-servicenow_integration",
   "project_page": "http://github.com/puppetlabs/puppetlabs-servicenow_integration",
   "issues_url": "http://github.com/puppetlabs/puppetlabs-servicenow_integration/issues",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "name":"WhatsARanjit/node_manager",
+      "version_requirement":">= 0.7.3 < 0.8.0"
+    }
+  ],
   "operatingsystem_support": [
     {
       "operatingsystem": "CentOS",

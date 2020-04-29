@@ -5,6 +5,9 @@
 # an include statement. Note that class parameters will be retrieved from Hiera via
 # the hiera backend that's shipped with the module.
 #
+# If $trusted['external']['servicenow']['puppet_classes'] doesn't exist, then this
+# class noops. Informally, this means that the class noops on non-ServiceNow nodes.
+#
 # @example
 #   include servicenow_integration::classification
 class servicenow_integration::classification {
