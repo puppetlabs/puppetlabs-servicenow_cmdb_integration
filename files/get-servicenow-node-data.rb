@@ -5,6 +5,54 @@ require 'net/http'
 require 'yaml'
 require 'json'
 
+def munge_response(hash, classes_field, environment_field)
+  validate_response(hash, classes_field, environment_field) unless ARGV[1] == 'SKIP_VALIDATION'
+  hash['puppet_classes'] = hash.delete(classes_field)
+  hash['puppet_environment'] = hash.delete(environment_field)
+
+  hash = create_hiera_data_key(hash)
+
+  hash
+end
+
+def validate_response(response_hash, classes_field, environment_field)
+  missing_fields = []
+
+  [classes_field, environment_field].each do |key|
+    missing_fields << key unless response_hash[key]
+  end
+
+  raise "required field(s) missing: #{missing_fields.join(',')}" unless missing_fields.count.zero?
+
+  raise "#{environment_field} is not a string" unless response_hash[environment_field].is_a? String
+
+  begin
+    classes_hash = JSON.parse(response_hash['u_puppet_classes'])
+    raise unless classes_hash.is_a? Hash
+
+    classes_hash.each do |_puppet_class, params|
+      raise unless params.is_a? Hash
+    end
+  rescue
+    raise 'classes must be a json serialization of type Hash[String, Hash[String, Any]]'
+  end
+end
+
+def create_hiera_data_key(hash)
+  hiera_data = {}
+  classes = JSON.parse(hash['puppet_classes'])
+
+  classes.each do |puppet_class, vars|
+    vars.each do |var_name, value|
+      class_and_param_name = "#{puppet_class}::#{var_name}"
+      hiera_data[class_and_param_name] = value
+    end
+  end
+
+  hash['hiera_data'] = hiera_data
+  hash
+end
+
 # Abstract away the API calls.
 class ServiceNowRequest
   def initialize(uri, http_verb, body, user, password)
@@ -15,7 +63,7 @@ class ServiceNowRequest
     @password = password
   end
 
-  def print_response
+  def response
     Net::HTTP.start(@uri.host,
                     @uri.port,
                     use_ssl: @uri.scheme == 'https',
@@ -38,18 +86,34 @@ class ServiceNowRequest
   end
 end
 
-if $PROGRAM_NAME == __FILE__
+def get_servicenow_node_data(certname)
   config = YAML.load_file('/etc/puppetlabs/puppet/servicenow.yaml')
 
-  snowinstance = config['snowinstance']
-  username     = config['user']
-  password     = config['password']
-  table        = config['table']
-  fqdn         = ARGV[0]
+  instance          = config['instance']
+  username          = config['user']
+  password          = config['password']
+  table             = config['table']
+  certname_field    = config['certname_field']
+  classes_field     = config['classes_field']
+  environment_field = config['environment_field']
 
-  uri = "https://#{snowinstance}.service-now.com/api/now/table/#{table}?fqdn=#{fqdn}"
+  uri = "https://#{instance}.service-now.com/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
 
-  request = ServiceNowRequest.new(uri, 'Get', nil, username, password)
-  response = JSON.parse(request.print_response)['result'].reduce({}, :merge)
-  puts response.to_json
+  servicenow = ServiceNowRequest.new(uri, 'Get', nil, username, password)
+
+  hash = JSON.parse(servicenow.response)['result'][0] || {}
+
+  unless hash.empty?
+    hash = munge_response(hash, classes_field, environment_field)
+  end
+
+  response = {
+    servicenow: hash,
+  }.to_json
+
+  response
+end
+
+if $PROGRAM_NAME == __FILE__
+  puts get_servicenow_node_data(ARGV[0])
 end

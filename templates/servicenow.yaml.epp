@@ -1,10 +1,16 @@
-<%- | String $snowinstance,
+<%- | String $instance,
       String $user,
       String $password,
-      String $table
+      String $table,
+      String $certname_field,
+      String $classses_field,
+      String $environment_field
 | -%>
 ---
-snowinstance: <%= $snowinstance %>
+instance: <%= $instance %>
 user: <%= $user %>
 password: <%= $password %>
 table: <%= $table %>
+certname_field: <%= $certname_field %>
+classes_field: <%= $classes_field %>
+environment_field: <%= $environment_field %>
