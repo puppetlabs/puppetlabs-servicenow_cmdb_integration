@@ -1,0 +1,15 @@
+{
+    "puppet_task_version": 1,
+    "supports_noop": false,
+    "description": "Adds a rule that matches on trusted.external.servicenow.puppet_environment",
+    "files": [
+        "ruby_task_helper/files/task_helper.rb",
+        "node_manager/lib/puppet/util/nc_https.rb"
+    ],
+    "parameters": {
+        "group_names": {
+            "description": "A list of environment group names that the rule will be added to",
+            "type": "Array[String, 1]"
+        }
+    }
+}

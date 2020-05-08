@@ -1,0 +1,58 @@
+{
+    "one_name": {
+        "name": "one_name",
+        "id": "one_id",
+        "environment": "one_environment",
+        "environment_trumps": true,
+        "rule": []
+    },
+    "two_name": {
+        "name": "two_name",
+        "id": "two_id",
+        "environment": "two_environment",
+        "environment_trumps": true,
+        "rule": []
+    },
+    "three_name": {
+        "name": "three_name",
+        "id": "three_id",
+        "environment": "three_environment",
+        "environment_trumps": true,
+        "rule": []
+    },
+    "four_name": {
+        "name": "four_name",
+        "id": "four_id",
+        "environment": "four_environment",
+        "environment_trumps": true,
+        "rule": []
+    },
+    "five_name": {
+        "name": "five_name",
+        "id": "five_id",
+        "environment": "five_environment",
+        "environment_trumps": true,
+        "rule": []
+    },
+    "six_name": {
+        "name": "six_name",
+        "id": "six_id",
+        "environment": "six_environment",
+        "environment_trumps": true,
+        "rule": []
+    },
+    "seven_name": {
+        "name": "seven_name",
+        "id": "seven_id",
+        "environment": "seven_environment",
+        "environment_trumps": true,
+        "rule": []
+    },
+    "eight_name": {
+        "name": "eight_name",
+        "id": "eight_id",
+        "environment": "eight_environment",
+        "environment_trumps": true,
+        "rule": []
+    }
+}
