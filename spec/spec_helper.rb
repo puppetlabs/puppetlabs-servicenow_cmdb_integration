@@ -49,6 +49,8 @@ RSpec.configure do |c|
   c.filter_run_excluding(bolt: true) unless ENV['GEM_BOLT']
   c.after(:suite) do
   end
+  # Doing this prevents paths like "../../../" for task unit tests
+  $LOAD_PATH << 'tasks'
 end
 
 # Ensures that a module is defined
