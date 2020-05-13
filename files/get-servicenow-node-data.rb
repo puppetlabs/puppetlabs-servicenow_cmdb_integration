@@ -48,6 +48,9 @@ def create_hiera_data_key(hash)
       hiera_data[class_and_param_name] = value
     end
   end
+  # This key will be used by the classification class to ensure
+  # that the Hiera backend's properly setup.
+  hiera_data['servicenow_integration_data_backend_present'] = true
 
   hash['hiera_data'] = hiera_data
   hash
