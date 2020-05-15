@@ -1,6 +1,5 @@
-# rubocop:disable Style/FileName
 def get_node_data_hash(fqdn = 'blah')
-  JSON.parse(get_servicenow_node_data(fqdn))['servicenow']
+  JSON.parse(servicenow(fqdn))['servicenow']
 end
 
 def mock_http_with(response)

@@ -89,7 +89,7 @@ class ServiceNowRequest
   end
 end
 
-def get_servicenow_node_data(certname)
+def servicenow(certname)
   config = YAML.load_file('/etc/puppetlabs/puppet/servicenow.yaml')
 
   instance          = config['instance']
@@ -118,5 +118,5 @@ def get_servicenow_node_data(certname)
 end
 
 if $PROGRAM_NAME == __FILE__
-  puts get_servicenow_node_data(ARGV[0])
+  puts servicenow(ARGV[0])
 end

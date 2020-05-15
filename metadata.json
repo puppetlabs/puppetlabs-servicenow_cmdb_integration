@@ -13,6 +13,10 @@
       "version_requirement": ">= 0.7.3 < 0.8.0"
     },
     {
+      "name": "puppetlabs/inifile",
+      "version_requirement": ">= 4.2.0 <= 4.3.0"
+    },
+    {
       "name": "puppetlabs/ruby_task_helper",
       "version_requirement": ">= 0.5.1 <= 1.0.0"
     }
@@ -58,7 +62,7 @@
   "requirements": [
     {
       "name": "puppet",
-      "version_requirement": ">= 4.10.0 < 7.0.0"
+      "version_requirement": ">= 6.14.0 < 7.0.0"
     }
   ],
   "pdk-version": "1.17.0",

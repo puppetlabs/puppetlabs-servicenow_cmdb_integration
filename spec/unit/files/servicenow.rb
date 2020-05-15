@@ -1,12 +1,11 @@
-# rubocop:disable Style/FileName
 require 'yaml'
 require 'spec_helper'
 require 'openssl'
-require 'support/get-servicenow-node-data_spec_helpers'
+require 'support/servicenow_spec_helpers'
 
-require_relative '../../../files/get-servicenow-node-data.rb'
+require_relative '../../../files/servicenow.rb'
 
-describe 'get-servicenow-node-data' do
+describe 'servicenow' do
   let(:valid_api_response) { File.read('./spec/support/files/valid_api_response.json') }
   let(:config) { JSON.parse(File.read('./spec/support/files/default_config.json')) }
   let(:certname) { 'example.puppet.com' }
@@ -24,7 +23,7 @@ describe 'get-servicenow-node-data' do
     end
 
     it 'returns "servicenow" as the top level node' do
-      hash = JSON.parse(get_servicenow_node_data('foo'))
+      hash = JSON.parse(servicenow('foo'))
       expect(hash['servicenow']).not_to be_nil
     end
 
@@ -93,7 +92,7 @@ describe 'get-servicenow-node-data' do
   context 'checking correct configuration in ServiceNow object' do
     it 'creates servicenow helper with correct parameters' do
       expect(ServiceNowRequest).to receive(:new).with(uri, 'Get', nil, config['user'], config['password'])
-      expect { get_servicenow_node_data('example.puppet.com') }.to raise_error(NoMethodError)
+      expect { servicenow('example.puppet.com') }.to raise_error(NoMethodError)
     end
   end
 end

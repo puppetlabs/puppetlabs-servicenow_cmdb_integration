@@ -9,3 +9,6 @@ fixtures:
     ruby_task_helper:
       repo: "puppetlabs/ruby_task_helper"
       ref: "0.5.1"
+    inifile:
+      repo: "puppetlabs/inifile"
+      ref: "4.2.0"
