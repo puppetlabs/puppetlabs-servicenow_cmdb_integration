@@ -51,6 +51,10 @@ describe 'get-servicenow-node-data' do
       expect(node_data_hash['hiera_data']['class::blah::param1']).to eq('value1')
       expect(node_data_hash['hiera_data']['class::blah::param2']).to eq('value2')
     end
+
+    it 'adds the data_backend_present key' do
+      expect(node_data_hash['hiera_data']['servicenow_integration_data_backend_present']).to be true
+    end
   end
 
   context 'node does not exist' do
