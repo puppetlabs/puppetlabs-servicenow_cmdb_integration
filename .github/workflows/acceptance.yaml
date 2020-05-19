@@ -1,0 +1,28 @@
+name: acceptance
+
+# on: 
+#   push:
+#     branches:
+#       - 'master'
+
+on: [pull_request]
+
+jobs:
+  LitmusAcceptance:
+    env:
+      PROVISION_LIST: acceptance
+      ruby_version: 2.5.x
+    runs-on: self-hosted
+    if: ${{ github.repository == 'puppetlabs/puppetlabs-servicenow_cmdb_integration' }}
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Litmus Parallel Acceptance
+      run: |
+        gem --version
+        gem install bundler
+        bundler -v
+        bundle install --jobs 4 --retry 2 --path .bundle/gems
+        bundle exec rake litmus:provision_list[$PROVISION_LIST]
+        bundle exec rake litmus:acceptance:parallel

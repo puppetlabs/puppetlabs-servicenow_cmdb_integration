@@ -1,5 +1,5 @@
 {
-  "instance": "dev1234",
+  "instance": "dev1234.service-now.com",
   "user": "admin",
   "password": "password",
   "table": "cmdb_ci",

@@ -3,6 +3,7 @@ os: linux
 dist: xenial
 language: ruby
 cache: bundler
+services: docker
 before_install:
   - bundle -v
   - rm -f Gemfile.lock
@@ -12,6 +13,7 @@ before_install:
   - '[ -z "$RUBYGEMS_VERSION" ] || (yes || true) | gem update --system $RUBYGEMS_VERSION'
   - gem --version
   - bundle -v
+  - docker run -d --rm -p 1080:1080 --name mockserver mockserver/mockserver
 script:
   - 'bundle exec rake $CHECK'
 bundler_args: --without system_tests
@@ -20,7 +22,6 @@ rvm:
 stages:
   - static
   - spec
-  - acceptance
   -
     if: tag =~ ^v\d
     name: deploy

@@ -1,8 +1,15 @@
 {
-  "result": [
+  "servicenow":
     {
-      "u_puppet_classes": "{\"test_class\":{\"var1\":\"value1\",\"var2\":\"value2\"},\"test_class2\":{\"var1\":\"value1\",\"var2\":\"value2\"}}",
-      "u_puppet_environment": "test_environment",
+      "puppet_classes": {"test_class":{"var1":"value1","var2":"value2"},"test_class2":{"var1":"value1","var2":"value2"}},
+      "hiera_data": {
+        "servicenow_cmdb_integration_data_backend_present": true,
+        "test_class2::var1": "value1",
+        "test_class2::var2": "value2",
+        "test_class::var1": "value1",
+        "test_class::var2": "value2"
+      },
+      "puppet_environment": "test_environment",
       "attested_date": "",
       "skip_sync": "false",
       "operational_status": "Operational",
@@ -84,5 +91,4 @@
       "fault_count": "0",
       "lease_id": ""
     }
-  ]
 }
