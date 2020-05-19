@@ -35,6 +35,12 @@ class servicenow_integration::trusted_external_command (
   $puppet_base = '/etc/puppetlabs/puppet'
   $external_commands_base = "${puppet_base}/trusted-external-commands"
 
+  if !defined(Service['pe-puppetserver']) {
+    service{'pe-puppetserver':
+      ensure => 'running'
+    }
+  }
+
   $resource_dependencies = flatten([
 
     file { $external_commands_base:

@@ -3,6 +3,7 @@ os: linux
 dist: xenial
 language: ruby
 cache: bundler
+services: docker
 before_install:
   - bundle -v
   - rm -f Gemfile.lock
@@ -12,6 +13,7 @@ before_install:
   - '[ -z "$RUBYGEMS_VERSION" ] || (yes || true) | gem update --system $RUBYGEMS_VERSION'
   - gem --version
   - bundle -v
+  - docker run -d --rm -p 1080:1080 --name mockserver mockserver/mockserver
 script:
   - 'bundle exec rake $CHECK'
 bundler_args: --without system_tests
@@ -27,13 +29,22 @@ stages:
 jobs:
   fast_finish: true
   include:
+    # -
+    #   env: CHECK="check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop syntax lint metadata_lint"
+    #   stage: static
+    # -
+    #   env: PUPPET_GEM_VERSION="~> 6.14" CHECK=parallel_spec
+    #   rvm: 2.5.7
+    #   stage: spec
     -
-      env: CHECK="check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop syntax lint metadata_lint"
-      stage: static
-    -
-      env: PUPPET_GEM_VERSION="~> 6.14" CHECK=parallel_spec
-      rvm: 2.5.7
-      stage: spec
+      env: CI=true CHECK=litmus:acceptance:localhost TARGET_HOST=localhost
+      script: |
+        rvm use system
+        sudo ./spec/support/files/install_pe.sh
+        rvm use 2.5.7
+        sudo puppet --version
+        bundle exec rake $CHECK
+      stage: acceptance
     -
       env: DEPLOY_TO_FORGE=yes
       stage: deploy

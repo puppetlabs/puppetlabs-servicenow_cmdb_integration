@@ -1,0 +1,3 @@
+acceptance:
+  provisioner: vmpooler
+  images: ['ubuntu-1604-x86_64']
