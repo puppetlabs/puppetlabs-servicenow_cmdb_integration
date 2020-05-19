@@ -1,59 +1,53 @@
 #!/opt/puppetlabs/puppet/bin/ruby
+# rubocop:disable Style/GuardClause
 
 require 'openssl'
 require 'net/http'
 require 'yaml'
 require 'json'
 
-def munge_response(hash, classes_field, environment_field)
-  validate_response(hash, classes_field, environment_field) unless ARGV[1] == 'SKIP_VALIDATION'
-  hash['puppet_classes'] = hash.delete(classes_field)
-  hash['puppet_environment'] = hash.delete(environment_field)
-
-  hash = create_hiera_data_key(hash)
-
-  hash
-end
-
-def validate_response(response_hash, classes_field, environment_field)
-  missing_fields = []
-
-  [classes_field, environment_field].each do |key|
-    missing_fields << key unless response_hash[key]
-  end
-
-  raise "required field(s) missing: #{missing_fields.join(',')}" unless missing_fields.count.zero?
-
-  raise "#{environment_field} is not a string" unless response_hash[environment_field].is_a? String
-
-  begin
-    classes_hash = JSON.parse(response_hash['u_puppet_classes'])
-    raise unless classes_hash.is_a? Hash
-
-    classes_hash.each do |_puppet_class, params|
-      raise unless params.is_a? Hash
+def parse_classification_fields(cmdb_record, classes_field, environment_field)
+  if cmdb_record.key?(environment_field)
+    # Validate the environment
+    environment = cmdb_record.delete(environment_field)
+    unless environment.is_a?(String)
+      raise "#{environment_field} must be a String"
     end
-  rescue
-    raise 'classes must be a json serialization of type Hash[String, Hash[String, Any]]'
+    # Set it
+    cmdb_record['puppet_environment'] = environment
   end
-end
 
-def create_hiera_data_key(hash)
-  hiera_data = {}
-  classes = JSON.parse(hash['puppet_classes'])
+  if cmdb_record.key?(classes_field)
+    # Validate the classes_field
+    classes = cmdb_record.delete(classes_field)
+    begin
+      classes = JSON.parse(classes)
+      raise unless classes.is_a? Hash
 
-  classes.each do |puppet_class, vars|
-    vars.each do |var_name, value|
-      class_and_param_name = "#{puppet_class}::#{var_name}"
-      hiera_data[class_and_param_name] = value
+      classes.each do |_puppet_class, params|
+        raise unless params.is_a? Hash
+      end
+    rescue
+      raise "#{classes_field} must be a json serialization of type Hash[String, Hash[String, Any]]"
     end
-  end
-  # This key will be used by the classification class to ensure
-  # that the Hiera backend's properly setup.
-  hiera_data['servicenow_integration_data_backend_present'] = true
 
-  hash['hiera_data'] = hiera_data
-  hash
+    # Create the hiera_data key to store class parameters. This is needed
+    # to fetch them from Hiera.
+    hiera_data = {}
+    classes.each do |puppet_class, vars|
+      vars.each do |var_name, value|
+        class_and_param_name = "#{puppet_class}::#{var_name}"
+        hiera_data[class_and_param_name] = value
+      end
+    end
+    # This key will be used by the classification class to ensure
+    # that the Hiera backend's properly setup.
+    hiera_data['servicenow_integration_data_backend_present'] = true
+
+    # Set the classes and hiera data
+    cmdb_record['puppet_classes'] = classes
+    cmdb_record['hiera_data'] = hiera_data
+  end
 end
 
 # Abstract away the API calls.
@@ -102,16 +96,13 @@ def servicenow(certname)
 
   uri = "https://#{instance}.service-now.com/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
 
-  servicenow = ServiceNowRequest.new(uri, 'Get', nil, username, password)
+  cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password)
 
-  hash = JSON.parse(servicenow.response)['result'][0] || {}
-
-  unless hash.empty?
-    hash = munge_response(hash, classes_field, environment_field)
-  end
+  cmdb_record = JSON.parse(cmdb_request.response)['result'][0] || {}
+  parse_classification_fields(cmdb_record, classes_field, environment_field)
 
   response = {
-    servicenow: hash,
+    servicenow: cmdb_record,
   }.to_json
 
   response

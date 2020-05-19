@@ -1,9 +1,6 @@
 {
   "result": [
     {
-      "u_puppet_environment": "blah",
-      "u_puppet_classes": "{\"class::foo\":{\"param1\":\"value1\",\"param2\":\"value2\"},\"class::blah\":{\"param1\":\"value1\",\"param2\":\"value2\"},\"class::bar\":{}}",
-      "u_puppet_certname": "example.puppet.com",
       "attested_date": "",
       "skip_sync": "false",
       "operational_status": "Operational",
