@@ -3,7 +3,7 @@
       String $password,
       String $table,
       String $certname_field,
-      String $classses_field,
+      String $classes_field,
       String $environment_field
 | -%>
 ---
