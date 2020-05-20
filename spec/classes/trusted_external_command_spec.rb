@@ -3,6 +3,12 @@
 require 'spec_helper'
 
 describe 'servicenow_integration::trusted_external_command' do
+  let(:pre_condition) do
+    <<-MANIFEST
+service { 'pe-puppetserver':
+}
+    MANIFEST
+  end
   let(:params) do
     {
       'instance' => 'foo_instance',

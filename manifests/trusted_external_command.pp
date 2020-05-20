@@ -75,6 +75,7 @@ class servicenow_integration::trusted_external_command (
     setting => 'trusted_external_command',
     value   => "${external_commands_base}/servicenow.rb",
     section => 'master',
+    notify  => Service['pe-puppetserver'],
     require => $resource_dependencies,
   }
 }
