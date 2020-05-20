@@ -20,6 +20,7 @@ def parse_classification_fields(cmdb_record, classes_field, environment_field)
   if cmdb_record.key?(classes_field)
     # Validate the classes_field
     classes = cmdb_record.delete(classes_field)
+    classes = '{}' if classes.empty?
     begin
       classes = JSON.parse(classes)
       raise unless classes.is_a? Hash

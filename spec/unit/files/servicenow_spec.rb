@@ -50,7 +50,13 @@ describe 'servicenow' do
 
         cmdb_record = response['result'][0]
         cmdb_record['u_puppet_environment'] = environment
-        cmdb_record['u_puppet_classes'] = classes.to_json
+
+        # Need to name as puppet_classes so that we can still access
+        # the 'classes' let variable
+        puppet_classes = classes
+        puppet_classes = puppet_classes.to_json unless puppet_classes.is_a?(String)
+        cmdb_record['u_puppet_classes'] = puppet_classes
+
         response['result'][0] = cmdb_record
 
         response.to_json
@@ -97,6 +103,14 @@ describe 'servicenow' do
 
         it 'throws an error' do
           expect { node_data_hash }.to raise_error(RuntimeError, 'u_puppet_classes must be a json serialization of type Hash[String, Hash[String, Any]]')
+        end
+      end
+
+      context 'classes is the empty string' do
+        let(:classes) { '' }
+
+        it 'sets puppet_classes to an empty hash' do
+          expect(node_data_hash['puppet_classes']).to eq({})
         end
       end
     end
