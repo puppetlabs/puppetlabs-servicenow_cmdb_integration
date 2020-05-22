@@ -1,6 +1,8 @@
 require 'puppet_litmus'
 require 'singleton'
 require 'puppet_litmus/rake_tasks' if Bundler.rubygems.find_name('puppet_litmus').any?
+require 'support/mockserver/helpers'
+require 'support/manifest_strings'
 
 # automatically load any shared examples or contexts
 Dir['./spec/support/**/*.rb'].sort.each { |f| require f }
@@ -33,6 +35,6 @@ def target_host_facts
 end
 
 def sudo_idempotent_apply(manifest)
-    apply_manifest(manifest, prefix_command: 'sudo', expect_changes: true)
+    apply_manifest(manifest, prefix_command: 'sudo', catch_failures: true)
     apply_manifest(manifest, prefix_command: 'sudo', catch_changes: true)
 end
