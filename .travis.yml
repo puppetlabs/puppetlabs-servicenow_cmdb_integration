@@ -29,15 +29,15 @@ stages:
 jobs:
   fast_finish: true
   include:
-    # -
-    #   env: CHECK="check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop syntax lint metadata_lint"
-    #   stage: static
-    # -
-    #   env: PUPPET_GEM_VERSION="~> 6.14" CHECK=parallel_spec
-    #   rvm: 2.5.7
-    #   stage: spec
     -
-      env: CI=true CHECK=litmus:acceptance:localhost TARGET_HOST=localhost
+      env: CHECK="check:symlinks check:git_ignore check:dot_underscore check:test_file rubocop syntax lint metadata_lint"
+      stage: static
+    -
+      env: PUPPET_GEM_VERSION="~> 6.14" CHECK=parallel_spec
+      rvm: 2.5.7
+      stage: spec
+    -
+      env: CI=true CHECK=litmus:acceptance:localhost
       script: |
         rvm use system
         sudo ./spec/support/files/install_pe.sh

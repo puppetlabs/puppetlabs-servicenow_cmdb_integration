@@ -1,9 +1,5 @@
-#!/opt/puppetlabs/puppet/bin/ruby
-# rubocop:disable Style/GuardClause
-
 require 'net/http'
 require 'json'
-
 
 class Mockserver
   def initialize(host)
@@ -28,53 +24,51 @@ class Mockserver
     raise e
   end
 
-  def set(path, return_body = nil, queryStringParameters = nil)
+  def set(path, return_body = nil, query_params = {})
     data = {
       httpRequest: {
-        path: normalize_path(path)
+        path: normalize_path(path),
       },
       httpResponse: {
-        body: return_body
-      }
+        body: return_body,
+      },
     }
 
-    data = addQueryParams(data, queryStringParameters) unless queryStringParameters.nil?
-
-    require 'pry'; binding.pry;
+    data = add_query_params(data, query_params)
 
     # A new return value for a previously defined mock path will not override the old one.
     # We clear the old path first to ensure we always get the value we expect.
     # However, this will also reset the counter the counter for calls to assert_mock_called
-    clear(path, queryStringParameters)
+    clear(path)
 
     reply = response('expectation', data)
 
-    reply[:code] == '201' ? reply : (raise "#{reply[:message]}: #{reply[:body]}")
+    (reply[:code] == '201') ? reply : (raise "#{reply[:message]}: #{reply[:body]}")
   rescue => e
     raise "Setting Mock Failed: #{e}"
   end
 
-  def clear(path, queryStringParameters = nil)
+  def clear(path)
     data = {
       httpRequest: {
-        path: normalize_path(path)
-      }
+        path: normalize_path(path),
+      },
     }
-    data = addQueryParams(data, queryStringParameters) unless queryStringParameters.nil?
+
     reply = response('clear', data)
-    reply[:code].to_i == 200 ? reply : (raise "#{reply[:message]}: #{reply[:body]}")
+    (reply[:code].to_i == 200) ? reply : (raise "#{reply[:message]}: #{reply[:body]}")
   rescue => e
     raise "Failed to clear mock for path: #{path} \n Error: #{e}"
   end
 
-  def assert_mock_called(path, queryStringParameters: nil, atLeast: nil, atMost: nil)
+  def assert_mock_called(path, query_params = {}, atLeast = nil, atMost = nil)
     data = {
       httpRequest: {
-        path: normalize_path(path)
-      }
+        path: normalize_path(path),
+      },
     }
 
-    data = addQueryParams(data, queryStringParameters) unless queryStringParameters.nil?
+    data = add_query_params(data, query_params)
 
     unless atLeast.nil? && atMost.nil?
       data[:times] = {}
@@ -97,32 +91,31 @@ class Mockserver
     raise "Failed to assert mock called: #{e}"
   end
 
-  def reset_mock_counter(path, queryStringParameters = nil)
+  def reset_mock_counter(path, query_params = {})
     data = {
-      path: normalize_path(path)
+      path: normalize_path(path),
     }
-    data = addQueryParams(data, queryStringParameters) unless queryStringParameters.nil?
+    data = add_query_params(data, query_params)
     reply = response('clear?type=LOG', data)
-    reply[:code].to_i == 200 ? reply : (raise "#{reply[:message]}: #{reply[:body]}")
+    (reply[:code].to_i == 200) ? reply : (raise "#{reply[:message]}: #{reply[:body]}")
   rescue => e
     raise "Failed to reset expectation counter: #{e}"
   end
 
   def normalize_path(path)
-    count = path.length - 2
     path.prepend('/') unless path.start_with?('/')
     path.delete_suffix!('/') if path.end_with?('/')
     path << "\/?" unless path.end_with?('/?')
     path
   end
 
-  def addQueryParams(data, queryStringParameters)
+  def add_query_params(data, query_params)
     parameters = {}
-    queryStringParameters.each do |param,values|
+    query_params.each do |param, values|
       parameters[param] = [values].flatten
     end
 
-    data[:httpRequest][:queryStringParameters] = parameters
+    data[:httpRequest][:queryStringParameters] = parameters unless parameters.empty?
     data
   end
 end

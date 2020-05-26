@@ -1,5 +1,5 @@
 class Manifests
-  Default = <<~HERE
+  DEFAULT = <<-HERE.freeze
   class {'servicenow_integration::trusted_external_command':
     instance => 'localhost:1080',
     user     => 'devuser',
@@ -7,7 +7,7 @@ class Manifests
   }
   HERE
 
-  AllPropertiesDefined = <<~HERE
+  ALL_PROPERTIES_DEFINED = <<-HERE.freeze
   class {'servicenow_integration::trusted_external_command':
     instance          => 'localhost:1080',
     user              => 'devuser',
@@ -23,15 +23,16 @@ class Manifests
                   table: 'cmdb_ci', certname_field: 'fqdn', classes_field: 'u_puppet_classes',
                   environment_field: 'u_puppet_environment')
 
-    params =  method(__method__).parameters.map do |_, name|
+    # rubocop:disable  Lint/BlockAlignment
+    params = method(__method__).parameters.map do |_, name|
                 key   = name.to_s.ljust(17, ' ')
                 value = binding.local_variable_get(name)
                 "  #{key} => #{value},"
-              end.join("\n")
+              end
 
-    <<~HERE
+    <<-HERE
     class {'servicenow_integration::trusted_external_command':,
-    #{params}
+    #{params.join("\n")}
     }
     HERE
   end
