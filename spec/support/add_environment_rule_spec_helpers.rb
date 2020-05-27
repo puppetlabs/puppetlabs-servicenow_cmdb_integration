@@ -6,5 +6,5 @@ def assert_task_error(e, msg_regex, kind, details = {})
 end
 
 def construct_env_rule(environment)
-  ['=', ['fact', 'trusted.external.servicenow.puppet_environment'], environment]
+  ['=', ['trusted', 'external', 'servicenow', 'puppet_environment'], environment]
 end
