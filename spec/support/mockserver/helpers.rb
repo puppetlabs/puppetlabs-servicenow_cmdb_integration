@@ -61,20 +61,21 @@ class Mockserver
     raise "Failed to clear mock for path: #{path} \n Error: #{e}"
   end
 
-  def assert_mock_called(path, query_params = {}, atLeast = nil, atMost = nil)
+  def mock_called?(path, query_params = {}, atLeast = nil, atMost = nil)
     data = {
       httpRequest: {
         path: normalize_path(path),
+      },
+      times: {
+        atLeast: 1
       },
     }
 
     data = add_query_params(data, query_params)
 
-    unless atLeast.nil? && atMost.nil?
-      data[:times] = {}
-      data[:times][:atLeast] = atLeast unless atLeast.nil?
-      data[:times][:atMost] = atMost unless atMost.nil?
-    end
+    data[:times][:atLeast] = atLeast unless atLeast.nil?
+    data[:times][:atMost] = atMost unless atMost.nil?
+
     reply = response('verify', data)
 
     # If the mock has been called the specified number of times the server response
@@ -83,7 +84,8 @@ class Mockserver
     when 202
       true
     when 406
-      false
+      require 'pry'; binding.pry;
+      raise reply[:body]
     else
       raise 'incorrect request format'
     end
@@ -91,11 +93,10 @@ class Mockserver
     raise "Failed to assert mock called: #{e}"
   end
 
-  def reset_mock_counter(path, query_params = {})
+  def reset_mock_counter(path)
     data = {
       path: normalize_path(path),
     }
-    data = add_query_params(data, query_params)
     reply = response('clear?type=LOG', data)
     (reply[:code].to_i == 200) ? reply : (raise "#{reply[:message]}: #{reply[:body]}")
   rescue => e

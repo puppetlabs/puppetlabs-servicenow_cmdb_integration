@@ -3,6 +3,7 @@ require 'singleton'
 require 'puppet_litmus/rake_tasks' if Bundler.rubygems.find_name('puppet_litmus').any?
 require 'support/mockserver/helpers'
 require 'support/manifest_strings'
+require 'yaml'
 
 # automatically load any shared examples or contexts
 Dir['./spec/support/**/*.rb'].sort.each { |f| require f }
@@ -34,9 +35,22 @@ def target_host_facts
   @target_host_facts
 end
 
-def sudo_idempotent_apply(manifest)
-  apply_manifest(manifest, prefix_command: 'sudo', catch_failures: true)
-  apply_manifest(manifest, prefix_command: 'sudo', catch_changes: true)
+def idempotent_apply_site_pp(manifest)
+  set_sitepp_content(manifest)
+  require 'pry'; binding.pry;
+
+  first_apply = run_shell('sudo puppet agent -t --detailed-exitcodes', expect_failures: true)
+  raise "stdout: #{first_apply[:stdout]}\nstderr: #{first_apply[:stderr]}" unless [0,2].include?(first_apply[:exit_code])
+
+  second_apply = run_shell('sudo puppet agent -t --detailed-exitcodes', expect_failures: true)
+  raise "stdout: #{second_apply[:stdout]}\nstderr: #{second_apply[:stderr]}" unless second_apply[:exit_code] == 0
+end
+
+def apply_site_pp(manifest)
+  set_sitepp_content(manifest)
+
+  apply_result = run_shell('sudo puppet agent -t --detailed-exitcodes', expect_failures: true)
+  raise "stdout: #{apply_result[:stdout]}\nstderr: #{apply_result[:stderr]}" unless [0,2].include?(apply_result[:exit_code])
 end
 
 def mockserver
@@ -44,8 +58,8 @@ def mockserver
   @mockserver
 end
 
-def run_mock_container
-  LitmusHelper.instance.run_shell('')
+def set_default_api_mock
+  mockserver.set(default_endpoint, default_api_response, default_query_params)
 end
 
 def default_api_response
@@ -54,7 +68,7 @@ def default_api_response
 end
 
 def default_endpoint
-  '/api/now/table/'
+  '/api/now/table/cmdb_ci'
 end
 
 def default_query_params
@@ -62,4 +76,19 @@ def default_query_params
     fqdn: ENV['TARGET_HOST'],
     sysparm_display_value: 'true',
   }
+end
+
+def servicenow_yaml_hash
+  yaml = run_shell('cat /etc/puppetlabs/puppet/servicenow.yaml')
+  YAML.load(yaml[:stdout], symbolize_names: true)
+end
+
+def set_sitepp_content(manifest)
+  content = <<-HERE
+  node default {
+    #{manifest}
+  }
+  HERE
+
+  run_shell("echo '#{content}' > /etc/puppetlabs/code/environments/production/manifests/site.pp")
 end

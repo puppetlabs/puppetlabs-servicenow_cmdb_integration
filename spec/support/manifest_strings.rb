@@ -1,21 +1,21 @@
 class Manifests
   DEFAULT = <<-HERE.freeze
-  class {'servicenow_integration::trusted_external_command':
-    instance => 'localhost:1080',
-    user     => 'devuser',
-    password => 'devpass',
+  class {"servicenow_integration::trusted_external_command":
+    instance => "localhost:1080",
+    user     => "devuser",
+    password => "devpass",
   }
   HERE
 
   ALL_PROPERTIES_DEFINED = <<-HERE.freeze
-  class {'servicenow_integration::trusted_external_command':
-    instance          => 'localhost:1080',
-    user              => 'devuser',
-    password          => 'devpass',
-    table             => 'fake_table',
-    certname_field    => 'fqdn',
-    classes_field     => 'u_puppet_classes',
-    environment_field => 'u_puppet_environment',
+  class {"servicenow_integration::trusted_external_command":
+    instance          => "localhost:1080",
+    user              => "devuser",
+    password          => "devpass",
+    table             => "cmdb_ci",
+    certname_field    => "fqdn",
+    classes_field     => "u_puppet_classes",
+    environment_field => "u_puppet_environment",
   }
   HERE
 

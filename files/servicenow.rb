@@ -73,6 +73,11 @@ class ServiceNowRequest
       # Add uri, fields and authentication to request
       request = request_class.new("#{@uri.path}?#{@uri.query}", header)
       request.body = @body
+      File.open("/tmp/debug.txt", "a"){|f|
+        f.write("#{@uri.host}\n")
+        f.write("#{@uri.port}\n")
+        f.write("#{@uri.path}?#{@uri.query}\n")
+      }
       request.basic_auth(@user, @password)
       # Make request to ServiceNow
       response = http.request(request)
@@ -95,11 +100,13 @@ def servicenow(certname)
   classes_field     = config['classes_field']
   environment_field = config['environment_field']
 
-  uri = "https://#{instance}.service-now.com/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
+  uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
 
   cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password)
 
-  cmdb_record = JSON.parse(cmdb_request.response)['result'][0] || {}
+  json_content = cmdb_request.response.empty? ? '{}' : cmdb_request.response
+
+  cmdb_record = JSON.parse(json_content)['result'][0] || {}
   parse_classification_fields(cmdb_record, classes_field, environment_field)
 
   response = {
@@ -110,5 +117,6 @@ def servicenow(certname)
 end
 
 if $PROGRAM_NAME == __FILE__
+  File.open("/tmp/debug.txt", "a"){|f| f.write("#{ARGV[0]}\n")}
   puts servicenow(ARGV[0])
 end
