@@ -87,8 +87,12 @@ class AddEnvironmentRule < TaskHelper
       groups_with_invalid_rules[name] ||= 'and_rule'
     end
     unless groups_with_invalid_rules.empty?
+      groups_with_invalid_rules_tuple = groups_with_invalid_rules.map do |group, reason|
+        "'#{group}' (#{reason})"
+      end
+
       raise TaskHelper::Error.new(
-        "Invalid rule detected in groups #{groups_with_invalid_rules.keys.join(', ')}",
+        "Invalid rule detected in groups #{groups_with_invalid_rules_tuple.join(', ')}",
         VALIDATION_ERROR,
         groups_with_invalid_rules,
       )
@@ -100,7 +104,7 @@ class AddEnvironmentRule < TaskHelper
     failed_groups = {}
     groups.each do |name, obj|
       rule = obj['rule']
-      env_rule = ['=', ['fact', 'trusted.external.servicenow.puppet_environment'], obj['environment']]
+      env_rule = ['=', ['trusted', 'external', 'servicenow', 'puppet_environment'], obj['environment']]
 
       # First, check if the rule's already been added to ensure idempotency.
       unless rule.nil?
