@@ -36,21 +36,20 @@ def target_host_facts
 end
 
 def idempotent_apply_site_pp(manifest)
-  set_sitepp_content(manifest)
-  require 'pry'; binding.pry;
+  sitepp_content(manifest)
 
   first_apply = run_shell('sudo puppet agent -t --detailed-exitcodes', expect_failures: true)
-  raise "stdout: #{first_apply[:stdout]}\nstderr: #{first_apply[:stderr]}" unless [0,2].include?(first_apply[:exit_code])
+  raise "stdout: #{first_apply[:stdout]}\nstderr: #{first_apply[:stderr]}" unless [0, 2].include?(first_apply[:exit_code])
 
   second_apply = run_shell('sudo puppet agent -t --detailed-exitcodes', expect_failures: true)
   raise "stdout: #{second_apply[:stdout]}\nstderr: #{second_apply[:stderr]}" unless second_apply[:exit_code] == 0
 end
 
 def apply_site_pp(manifest)
-  set_sitepp_content(manifest)
+  sitepp_content(manifest)
 
   apply_result = run_shell('sudo puppet agent -t --detailed-exitcodes', expect_failures: true)
-  raise "stdout: #{apply_result[:stdout]}\nstderr: #{apply_result[:stderr]}" unless [0,2].include?(apply_result[:exit_code])
+  raise "stdout: #{apply_result[:stdout]}\nstderr: #{apply_result[:stderr]}" unless [0, 2].include?(apply_result[:exit_code])
 end
 
 def mockserver
@@ -80,10 +79,10 @@ end
 
 def servicenow_yaml_hash
   yaml = run_shell('cat /etc/puppetlabs/puppet/servicenow.yaml')
-  YAML.load(yaml[:stdout], symbolize_names: true)
+  YAML.safe_load(yaml[:stdout], symbolize_names: true)
 end
 
-def set_sitepp_content(manifest)
+def sitepp_content(manifest)
   content = <<-HERE
   node default {
     #{manifest}

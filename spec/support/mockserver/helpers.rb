@@ -67,7 +67,7 @@ class Mockserver
         path: normalize_path(path),
       },
       times: {
-        atLeast: 1
+        atLeast: 1,
       },
     }
 
@@ -84,7 +84,6 @@ class Mockserver
     when 202
       true
     when 406
-      require 'pry'; binding.pry;
       raise reply[:body]
     else
       raise 'incorrect request format'
