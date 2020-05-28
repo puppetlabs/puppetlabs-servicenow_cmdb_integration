@@ -87,7 +87,7 @@ describe 'servicenow' do
       end
 
       it 'adds the data_backend_present key' do
-        expect(node_data_hash['hiera_data']['servicenow_integration_data_backend_present']).to be true
+        expect(node_data_hash['hiera_data']['servicenow_cmdb_integration_data_backend_present']).to be true
       end
 
       context 'invalid environment' do

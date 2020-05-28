@@ -1,4 +1,4 @@
-Puppet::Functions.create_function(:'servicenow_integration::getvar') do
+Puppet::Functions.create_function(:'servicenow_cmdb_integration::getvar') do
   dispatch :getvar do
     param 'Struct[{var=>String[1],topscope_vars_only=>Optional[Boolean]}]', :options
     param 'Puppet::LookupContext', :context
@@ -49,7 +49,7 @@ config
       # exist in var_value
       final_value = call_function('get', var_value, rem_sequence, {})
       unless final_value.is_a?(Hash)
-        msg = "[servicenow_integration::getvar] '#{var}'' resolves to a non-Hash value so returning an empty Hash instead"
+        msg = "[servicenow_cmdb_integration::getvar] '#{var}'' resolves to a non-Hash value so returning an empty Hash instead"
         context.explain { msg }
         final_value = {}
       end

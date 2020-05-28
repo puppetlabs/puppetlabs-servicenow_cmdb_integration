@@ -3,6 +3,6 @@ version: 5
 
 hierarchy:
   - name: "ServiceNow Hiera data"
-    data_hash: servicenow_integration::getvar
+    data_hash: servicenow_cmdb_integration::getvar
     options:
       var: trusted.external.servicenow.hiera_data

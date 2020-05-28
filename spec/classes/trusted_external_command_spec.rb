@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe 'servicenow_integration::trusted_external_command' do
+describe 'servicenow_cmdb_integration::trusted_external_command' do
   let(:params) do
     {
       'instance' => 'foo_instance',

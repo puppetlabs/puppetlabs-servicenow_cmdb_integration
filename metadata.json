@@ -1,12 +1,12 @@
 {
-  "name": "puppetlabs-servicenow_integration",
+  "name": "puppetlabs-servicenow_cmdb_integration",
   "version": "0.1.0",
   "author": "Puppet, Inc.",
   "summary": "A module that allows Puppet to query ServiceNow's CMDB for node data, including classification.",
   "license": "Apache-2.0",
-  "source": "http://github.com/puppetlabs/puppetlabs-servicenow_integration",
-  "project_page": "http://github.com/puppetlabs/puppetlabs-servicenow_integration",
-  "issues_url": "http://github.com/puppetlabs/puppetlabs-servicenow_integration/issues",
+  "source": "http://github.com/puppetlabs/puppetlabs-servicenow_cmdb_integration",
+  "project_page": "http://github.com/puppetlabs/puppetlabs-servicenow_cmdb_integration",
+  "issues_url": "http://github.com/puppetlabs/puppetlabs-servicenow_cmdb_integration/issues",
   "dependencies": [
     {
       "name": "WhatsARanjit/node_manager",

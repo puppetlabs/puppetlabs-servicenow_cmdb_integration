@@ -15,8 +15,8 @@ require_relative "#{dependencies_dir}/ruby_task_helper/files/task_helper.rb"
 require_relative "#{dependencies_dir}/node_manager/lib/puppet/util/nc_https.rb"
 
 # Useful constants
-VALIDATION_ERROR = 'servicenow_integration.validation'.freeze
-CLASSIFIER_ERROR = 'servicenow_integration.classifier'.freeze
+VALIDATION_ERROR = 'servicenow_cmdb_integration.validation'.freeze
+CLASSIFIER_ERROR = 'servicenow_cmdb_integration.classifier'.freeze
 AND_OP = 'and'.freeze
 OR_OP = 'or'.freeze
 BIN_OPS = [AND_OP, OR_OP].freeze
