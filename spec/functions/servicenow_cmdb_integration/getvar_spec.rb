@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'servicenow_integration::getvar' do
+describe 'servicenow_cmdb_integration::getvar' do
   let(:context) do
     Puppet::Pops::Lookup::Context.new({}, {})
   end

@@ -43,7 +43,7 @@ def parse_classification_fields(cmdb_record, classes_field, environment_field)
     end
     # This key will be used by the classification class to ensure
     # that the Hiera backend's properly setup.
-    hiera_data['servicenow_integration_data_backend_present'] = true
+    hiera_data['servicenow_cmdb_integration_data_backend_present'] = true
 
     # Set the classes and hiera data
     cmdb_record['puppet_classes'] = classes

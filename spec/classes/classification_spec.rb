@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe 'servicenow_integration::classification' do
+describe 'servicenow_cmdb_integration::classification' do
   context 'when servicenow.puppet_classes is not specified' do
     it { is_expected.to compile }
   end
@@ -12,7 +12,7 @@ describe 'servicenow_integration::classification' do
       {}
     end
     let(:hiera_data) do
-      { servicenow_integration_data_backend_present: true }
+      { servicenow_cmdb_integration_data_backend_present: true }
     end
     let(:trusted_external_data) do
       {
