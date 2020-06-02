@@ -35,10 +35,12 @@ end
 puppet_version = ENV['PUPPET_GEM_VERSION']
 facter_version = ENV['FACTER_GEM_VERSION']
 hiera_version = ENV['HIERA_GEM_VERSION']
+hiera_eyaml_version = ENV['HIERA_EYAML_GEM_VERSION']
 
 gems = {}
 
 gems['puppet'] = location_for(puppet_version)
+gems['hiera-eyaml'] = location_for(hiera_eyaml_version)
 
 # If facter or hiera versions have been specified via the environment
 # variables
