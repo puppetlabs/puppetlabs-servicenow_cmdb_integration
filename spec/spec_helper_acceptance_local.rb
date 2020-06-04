@@ -1,101 +1,60 @@
-require 'puppet_litmus'
-require 'singleton'
-require 'puppet_litmus/rake_tasks' if Bundler.rubygems.find_name('puppet_litmus').any?
-require 'support/mockserver/helpers'
-require 'support/manifest_strings'
-require 'yaml'
+# rubocop:disable Style/AccessorMethodName
 
-# automatically load any shared examples or contexts
-Dir['./spec/support/**/*.rb'].sort.each { |f| require f }
-
-class LitmusHelper
-  include Singleton
-  include PuppetLitmus
-end
+require './spec/support/acceptance/helpers.rb'
 
 RSpec.configure do |c|
+  include TargetHelpers
+
   # Configure all nodes in nodeset
   c.before :suite do
-    puts 'Validate PE Installed.'
-    LitmusHelper.instance.bolt_run_script('spec/support/acceptance/install_pe.sh')
-    puts 'Validate Mockserver container running'
-    LitmusHelper.instance.bolt_run_script('spec/support/acceptance/run_mockserver_container.sh')
-    puts 'Install module on system under test'
-    Rake::Task['litmus:install_module'].invoke unless ENV['CI'] == 'true'
+    inventory_hash = LitmusHelpers.inventory_hash_from_inventory_file
+    servicenow_instance_uri = servicenow_instance.uri
+    servicenow_bolt_config = LitmusHelpers.config_from_node(inventory_hash, servicenow_instance_uri)
+    servicenow_config = servicenow_bolt_config['remote']
+    manifest = <<-MANIFEST
+   class { "servicenow_cmdb_integration::trusted_external_command":
+     instance => "#{servicenow_instance_uri}",
+     user     => "#{servicenow_config['user']}",
+     password => "#{servicenow_config['password']}",
+   }
+    MANIFEST
+
+    set_sitepp_content(manifest)
+    trigger_puppet_run(master)
+    # Test idempotency
+    trigger_puppet_run(master, acceptable_exit_codes: [0])
+    set_sitepp_content('')
   end
 end
 
-def idempotent_apply_site_pp(manifest)
-  # Since we are testing a feature of the puppet master, we cannot use the standard litmus apply_catalog function
-  # which creates a standalone manifest file and calls Puppet apply against the path of the manifest.
-  # We need the master to compile a catalog for the node, in this case itself. To do that we set the contents
-  # of the site.pp file and call puppet agent -t
-  sitepp_content(manifest)
-
-  # When running on CI platforms like Travis, calling puppet agent -t without sudo causes the run to fail because
-  # this module manages file owned by Puppet.
-  first_apply = run_shell('sudo puppet agent -t --detailed-exitcodes', expect_failures: true)
-  raise "stdout: #{first_apply[:stdout]}\nstderr: #{first_apply[:stderr]}" unless [0, 2].include?(first_apply[:exit_code])
-
-  second_apply = run_shell('sudo puppet agent -t --detailed-exitcodes', expect_failures: true)
-  raise "stdout: #{second_apply[:stdout]}\nstderr: #{second_apply[:stderr]}" unless second_apply[:exit_code] == 0
-end
-
-def apply_site_pp(manifest)
-  sitepp_content(manifest)
-
-  apply_result = run_shell('sudo puppet agent -t --detailed-exitcodes', expect_failures: true)
-  raise "stdout: #{apply_result[:stdout]}\nstderr: #{apply_result[:stderr]}" unless [0, 2].include?(apply_result[:exit_code])
-  block_given? ? yield(apply_result) : apply_result
-end
-
-def mockserver
-  @mockserver ||= Mockserver.new("#{ENV['TARGET_HOST']}:1080")
-  @mockserver
-end
-
-def set_default_api_mock
-  mockserver.set(default_endpoint, default_api_response, default_query_params)
-end
-
-def default_api_response
-  file_content = File.read('spec/support/files/valid_api_response.json')
-  file_content.gsub('dev84270.service-now.com', "#{ENV['TARGET_HOST']}:1080")
-end
-
-def default_endpoint
-  '/api/now/table/cmdb_ci'
-end
-
-def default_query_params
-  {
-    fqdn: ENV['TARGET_HOST'],
-    sysparm_display_value: 'true',
-  }
-end
-
-def servicenow_yaml_hash
-  yaml = run_shell('cat /etc/puppetlabs/puppet/servicenow.yaml')
-  YAML.safe_load(yaml[:stdout], symbolize_names: true)
-end
-
-def sitepp_content(manifest)
+# TODO: This will cause some problems if we run the tests
+# in parallel. For example, what happens if two targets
+# try to modify site.pp at the same time?
+def set_sitepp_content(manifest)
   content = <<-HERE
   node default {
     #{manifest}
   }
   HERE
 
-  run_shell("echo '#{content}' > /etc/puppetlabs/code/environments/production/manifests/site.pp")
+  master.run_shell("echo '#{content}' > /etc/puppetlabs/code/environments/production/manifests/site.pp")
 end
 
-def capture_trusted_notice(report)
-  # If you apply the Manifests::TRUSTED_EXTERNAL_VARIABLE manifest it will emit a notice
-  # that will contain the contents of the $trusted variable. This function will capture
-  json_regex = %r{defined 'message' as '(?<trusted_json>.+)'}
+def trigger_puppet_run(target, acceptable_exit_codes: [0, 2])
+  result = target.run_shell('puppet agent -t --detailed-exitcodes', expect_failures: true)
+  unless acceptable_exit_codes.include?(result[:exit_code])
+    raise "Puppet run failed\nstdout: #{result[:stdout]}\nstderr: #{result[:stderr]}"
+  end
+  result
+end
 
-  matches = report[:stdout].match(json_regex)
-  raise 'trusted external json content not found' if matches.nil?
-  parsed_data = JSON.parse(matches[:trusted_json], symbolize_names: true)
-  parsed_data.dig :external, :servicenow
+TRUSTED_JSON_SEPARATOR = '<TRUSTED_JSON>'.freeze
+def parse_trusted_json(puppet_output)
+  trusted_json = puppet_output.split(TRUSTED_JSON_SEPARATOR)[1]
+  if trusted_json.nil?
+    raise "Puppet output does not contain the expected '#{TRUSTED_JSON_SEPARATOR}<trusted_json>#{TRUSTED_JSON_SEPARATOR}' output"
+  end
+  JSON.parse(trusted_json)
+rescue => e
+  raise "Failed to parse the trusted JSON: #{e}"
 end
