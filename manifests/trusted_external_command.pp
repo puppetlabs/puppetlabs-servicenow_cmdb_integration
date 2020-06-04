@@ -69,7 +69,10 @@ class servicenow_cmdb_integration::trusted_external_command (
     },
   ])
 
-  unless Service['pe-puppetserver'] {
+  unless defined(Service['pe-puppetserver']) {
+    # Service['pe-puppetserver'] is undefined. This is possible if
+    # the user's applying the class via 'puppet apply'. Thus, we
+    # define it here to improve the 'puppet apply' UX.
     service {'pe-puppetserver':}
   }
 
