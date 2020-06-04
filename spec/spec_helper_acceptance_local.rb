@@ -17,9 +17,9 @@ RSpec.configure do |c|
   # Configure all nodes in nodeset
   c.before :suite do
     puts 'Validate PE Installed.'
-    LitmusHelper.instance.bolt_run_script('spec/support/files/install_pe.sh')
+    LitmusHelper.instance.bolt_run_script('spec/support/acceptance/install_pe.sh')
     puts 'Validate Mockserver container running'
-    LitmusHelper.instance.bolt_run_script('spec/support/files/run_mockserver_container.sh')
+    LitmusHelper.instance.bolt_run_script('spec/support/acceptance/run_mockserver_container.sh')
     puts 'Install module on system under test'
     Rake::Task['litmus:install_module'].invoke unless ENV['CI'] == 'true'
   end
