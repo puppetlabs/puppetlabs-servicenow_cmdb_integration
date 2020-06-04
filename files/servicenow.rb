@@ -95,7 +95,7 @@ def servicenow(certname)
   classes_field     = config['classes_field']
   environment_field = config['environment_field']
 
-  uri = "https://#{instance}.service-now.com/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
+  uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
 
   cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password)
 

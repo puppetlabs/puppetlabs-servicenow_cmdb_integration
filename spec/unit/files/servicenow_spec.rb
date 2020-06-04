@@ -1,6 +1,7 @@
 require 'yaml'
 require 'spec_helper'
 require 'openssl'
+require 'hashdiff'
 
 require_relative '../../../files/servicenow.rb'
 
@@ -8,10 +9,11 @@ describe 'servicenow' do
   let(:api_response) { File.read('./spec/support/files/valid_api_response.json') }
   let(:config) { JSON.parse(File.read('./spec/support/files/default_config.json')) }
   let(:node_data_hash) { JSON.parse(servicenow('blah'))['servicenow'] }
+  let(:expected_response_json) { File.read('./spec/support/files/servicenow_rb_response.json') }
 
   before(:each) do
     allow(YAML).to receive(:load_file).and_return(config)
-    allow(Net::HTTP).to receive(:start).with("#{config['instance']}.service-now.com", 443, use_ssl: true, verify_mode: 0).and_return(api_response)
+    allow(Net::HTTP).to receive(:start).with(config['instance'].to_s, 443, use_ssl: true, verify_mode: 0).and_return(api_response)
   end
 
   context 'node does not exist' do
@@ -25,9 +27,9 @@ describe 'servicenow' do
   end
 
   context 'node exists' do
-    it "returns the node's CMDB record" do
-      expected_cmdb_record = JSON.parse(api_response)['result'][0]
-      expect(node_data_hash).to eql(expected_cmdb_record)
+    it "returns the node's parsed CMDB record" do
+      expected_response = JSON.parse(expected_response_json)['servicenow']
+      expect(Hashdiff.diff(expected_response, node_data_hash)).to be_empty
     end
 
     context 'CMDB record contains classification fields' do
@@ -119,7 +121,7 @@ describe 'servicenow' do
   context 'checking correct configuration in ServiceNow object' do
     it 'creates servicenow helper with correct parameters' do
       certname = 'example.puppet.com'
-      uri = "https://#{config['instance']}.service-now.com/api/now/table/#{config['table']}?#{config['certname_field']}=#{certname}&sysparm_display_value=true"
+      uri = "https://#{config['instance']}/api/now/table/#{config['table']}?#{config['certname_field']}=#{certname}&sysparm_display_value=true"
 
       expect(ServiceNowRequest).to receive(:new).with(uri, 'Get', nil, config['user'], config['password'])
       expect { servicenow('example.puppet.com') }.to raise_error(NoMethodError)
