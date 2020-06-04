@@ -4,10 +4,10 @@ version=`puppet --version`
 
 if [ -z "$version" ]; then
   PE_RELEASE=2019.6
-  PE_LATEST=$(curl https://artifactory.delivery.puppetlabs.net/artifactory/enterprise/${PE_RELEASE}/release/ci-ready/LATEST)
+  PE_LATEST=$(curl https://artifactory.delivery.puppetlabs.net/artifactory/generic_enterprise__local/${PE_RELEASE}/release/ci-ready/LATEST)
   PE_FILE_NAME=puppet-enterprise-${PE_LATEST}-ubuntu-16.04-amd64
   TAR_FILE=${PE_FILE_NAME}.tar
-  DOWNLOAD_URL=https://artifactory.delivery.puppetlabs.net/artifactory/enterprise/${PE_RELEASE}/release/ci-ready/${TAR_FILE}
+  DOWNLOAD_URL=https://artifactory.delivery.puppetlabs.net/artifactory/generic_enterprise__local/${PE_RELEASE}/release/ci-ready/${TAR_FILE}
 
   ## Download PE
   curl -o ${TAR_FILE} ${DOWNLOAD_URL}
