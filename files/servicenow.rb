@@ -6,6 +6,12 @@ require 'net/http'
 require 'yaml'
 require 'json'
 
+# hiera-eyaml requires. Note that newer versions of puppet-agent
+# ship with the hiera-eyaml gem so these should work.
+require 'hiera/backend/eyaml/options'
+require 'hiera/backend/eyaml/parser/parser'
+require 'hiera/backend/eyaml/subcommand'
+
 def parse_classification_fields(cmdb_record, classes_field, environment_field)
   if cmdb_record.key?(environment_field)
     # Validate the environment
@@ -85,15 +91,47 @@ class ServiceNowRequest
 end
 
 def servicenow(certname)
-  config = YAML.load_file('/etc/puppetlabs/puppet/servicenow.yaml')
+  servicenow_config = YAML.load_file('/etc/puppetlabs/puppet/servicenow.yaml')
 
-  instance          = config['instance']
-  username          = config['user']
-  password          = config['password']
-  table             = config['table']
-  certname_field    = config['certname_field']
-  classes_field     = config['classes_field']
-  environment_field = config['environment_field']
+  instance          = servicenow_config['instance']
+  username          = servicenow_config['user']
+  password          = servicenow_config['password']
+  table             = servicenow_config['table']
+  certname_field    = servicenow_config['certname_field']
+  classes_field     = servicenow_config['classes_field']
+  environment_field = servicenow_config['environment_field']
+
+  # Since we also support hiera-eyaml encrypted passwords, we'll want to decrypt
+  # the password before passing it into the request. In order to do that, we first
+  # check if hiera-eyaml's configured on the node. If yes, then we run the password
+  # through hiera-eyaml's parser. The parser will decrypt the password if it is
+  # encrypted; otherwise, it will leave it as-is so that plain-text passwords are
+  # unaffected.
+  hiera_eyaml_config = nil
+  begin
+    # Note: If hiera-eyaml config doesn't exist, then load_config_file returns
+    # the hash {:options => {}, :sources => []}
+    hiera_eyaml_config = Hiera::Backend::Eyaml::Subcommand.load_config_file
+  rescue StandardError => e
+    raise "error reading the hiera-eyaml config: #{e}"
+  end
+  unless hiera_eyaml_config[:sources].empty?
+    # hiera_eyaml config exists so run the password through the parser. Note that
+    # we chomp the password to support syntax like:
+    #
+    #   password: >
+    #       ENC[Y22exl+OvjDe+drmik2XEeD3VQtl1uZJXFFF2NnrMXDWx0csyqLB/2NOWefv
+    #       NBTZfOlPvMlAesyr4bUY4I5XeVbVk38XKxeriH69EFAD4CahIZlC8lkE/uDh
+    #       ...
+    #
+    # where the '>' will add a trailing newline to the encrypted password.
+    #
+    # Note that ServiceNow passwords can't contain a newline so chomping's still OK
+    # for plain-text passwords.
+    Hiera::Backend::Eyaml::Options.set(hiera_eyaml_config[:options])
+    tokens = Hiera::Backend::Eyaml::Parser::ParserFactory.hiera_backend_parser.parse(password.chomp)
+    password = tokens.map(&:to_plain_text).join
+  end
 
   uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
 
