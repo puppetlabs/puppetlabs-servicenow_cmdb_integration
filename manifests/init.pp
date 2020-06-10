@@ -1,7 +1,7 @@
 # @summary Configures the servicenow.rb trusted external command
 #
 # @example
-#   include servicenow_cmdb_integration::trusted_external_command
+#   include servicenow_cmdb_integration
 # @param [String] instance
 #   The FQDN of the ServiceNow instance to query
 # @param [String] user
@@ -21,7 +21,7 @@
 # @param [String] environment_field
 #   The column name of the CMDB field that stores the node's environment. Defaults
 #   to 'u_puppet_environment'.
-class servicenow_cmdb_integration::trusted_external_command (
+class servicenow_cmdb_integration (
   String $instance,
   String $user,
   String $password,

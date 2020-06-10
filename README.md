@@ -41,10 +41,10 @@ If you'd like to also classify nodes in ServiceNow's CMDB, then the module:
 **Note:** If you're interested in both the ServiceNow CMDB external data and node classification features of this module, then you can just read the [classification](#ServiceNow-node-classification) section since that depends on the CMDB external data feature.
 
 #### ServiceNow CMDB as trusted external data
-Apply the `servicenow_cmdb_integration::trusted_external_command` class on all of your compilers. This looks something like:
+Apply the `servicenow_cmdb_integration` class on all of your compilers. This looks something like:
 
 ```
-class { 'servicenow_cmdb_integration::trusted_external_command':
+class { 'servicenow_cmdb_integration':
   instance => '<fqdn_of_snow_instance>',
   user     => '<user>',
   password => '<password>',
