@@ -118,16 +118,24 @@ namespace :acceptance do
   end
 
   desc 'Sets up the ServiceNow instance'
-  task :setup_servicenow_instance do
-    # Start the mock ServiceNow instance. Note that the script's already idempotent
-    # (and fast enough) so we don't need to check the inventory file for the created
-    # ServiceNow instance
-    puts("Starting the mock ServiceNow instance at the master (#{master.uri})")
-    master.bolt_upload_file('./spec/support/acceptance/servicenow', '/tmp/servicenow')
-    master.bolt_run_script('spec/support/acceptance/start_mock_servicenow_instance.sh')
+  task :setup_servicenow_instance, [:instance, :user, :password] do |_, args|
+    instance, user, password = args[:instance], args[:user], args[:password]
+    if instance.nil?
+      # Start the mock ServiceNow instance. Note that the script's already idempotent
+      # so it will noop if the instance is already started.
+      puts("Starting the mock ServiceNow instance at the master (#{master.uri})")
+      master.bolt_upload_file('./spec/support/acceptance/servicenow', '/tmp/servicenow')
+      master.bolt_run_script('spec/support/acceptance/start_mock_servicenow_instance.sh')
+      instance, user, password = "#{master.uri}:1080", 'mock_user', 'mock_password'
+    else
+      # User provided their own ServiceNow instance so make sure that they've also
+      # included the instance's credentials
+      raise 'The ServiceNow username must be provided' if user.nil?
+      raise 'The ServiceNow password must be provided' if password.nil?
+    end
 
     # Update the inventory file
-    puts('Updating the inventory.yaml file with the mock ServiceNow instance credentials')
+    puts('Updating the inventory.yaml file with the ServiceNow instance credentials')
     inventory_hash = LitmusHelpers.inventory_hash_from_inventory_file
     servicenow_group = inventory_hash['groups'].find { |g| g['name'] =~ %r{servicenow} }
     unless servicenow_group
@@ -135,12 +143,12 @@ namespace :acceptance do
       inventory_hash['groups'].push(servicenow_group)
     end
     servicenow_group['targets'] = [{
-      'uri' => "#{master.uri}:1080",
+      'uri' => instance,
       'config' => {
         'transport' => 'remote',
         'remote' => {
-          'user' => 'mock_user',
-          'password' => 'mock_password'
+          'user' => user,
+          'password' => password,
         }
       },
       'vars' => {
