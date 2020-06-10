@@ -22,7 +22,7 @@ This module integrates ServiceNow's CMDB with Puppet Enterprise. Specifically, i
 
 * Installs a `servicenow.rb` script into a created `/etc/puppetlabs/puppet/trusted-external-commands` directory.
 
-* Creates a `servicenow.yaml` configuration file in `/etc/puppetlabs/puppet` that is needed by the `servicenow.rb` script.
+* Creates a `servicenow_cmdb.yaml` configuration file in `/etc/puppetlabs/puppet` that is needed by the `servicenow.rb` script.
 
 * Updates `puppet.conf`'s `trusted_external_command` setting to point to the `servicenow.rb` script.
 

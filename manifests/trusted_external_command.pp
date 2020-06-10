@@ -52,12 +52,12 @@ class servicenow_cmdb_integration::trusted_external_command (
       require => [File[$external_commands_base]],
     },
 
-    file { "${puppet_base}/servicenow.yaml":
+    file { "${puppet_base}/servicenow_cmdb.yaml":
       ensure  => file,
       owner   => 'pe-puppet',
       group   => 'pe-puppet',
       mode    => '0640',
-      content => epp('servicenow_cmdb_integration/servicenow.yaml.epp', {
+      content => epp('servicenow_cmdb_integration/servicenow_cmdb.yaml.epp', {
         instance          => $instance,
         user              => $user,
         password          => $password,
