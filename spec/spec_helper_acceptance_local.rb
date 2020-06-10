@@ -10,13 +10,22 @@ end
 # in parallel. For example, what happens if two targets
 # try to modify site.pp at the same time?
 def set_sitepp_content(manifest)
+  site_pp_path = '/opt/puppetlabs/server/data/code-manager/code/environments/production/manifests/site.pp'
+
   content = <<-HERE
   node default {
     #{manifest}
   }
   HERE
 
-  master.run_shell("echo '#{content}' > /etc/puppetlabs/code/environments/production/manifests/site.pp")
+  Tempfile.open('manifest') do |f|
+    f.write(content)
+    f.flush
+    master.bolt_upload_file(f.path, site_pp_path)
+    f.unlink
+  end
+  master.run_shell("chown pe-puppet:pe-puppet #{site_pp_path}")
+  master.run_shell('puppetserver reload')
 end
 
 def trigger_puppet_run(target, acceptable_exit_codes: [0, 2])
@@ -53,4 +62,14 @@ end
 
 def to_manifest(*declarations)
   declarations.join("\n")
+end
+
+def setup_eyaml
+  master.run_shell('mkdir -p /etc/eyaml')
+  master.bolt_upload_file('spec/support/common/hiera-eyaml/private_key.pkcs7.pem', '/etc/eyaml/private_key.pkcs7.pem')
+  master.bolt_upload_file('spec/support/common/hiera-eyaml/public_key.pkcs7.pem', '/etc/eyaml/public_key.pkcs7.pem')
+  master.bolt_upload_file('spec/support/common/hiera-eyaml/config.yaml', '/etc/eyaml/config.yaml')
+  master.run_shell('chown -R pe-puppet:pe-puppet /etc/eyaml')
+  master.run_shell('chmod -R 0500 /etc/eyaml')
+  master.run_shell('chmod 0400 /etc/eyaml/*.pem')
 end

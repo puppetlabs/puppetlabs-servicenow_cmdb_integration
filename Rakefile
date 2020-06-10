@@ -93,31 +93,39 @@ namespace :acceptance do
   require_relative './spec/support/acceptance/helpers'
   include TargetHelpers
 
-  desc 'Provisions the VMs. This is currently just the master'
-  task :provision_vms do
-    if File.exist?('inventory.yaml')
-      # Check if a master VM's already been setup
-      begin
-        uri = master.uri
-        puts("A master VM at '#{uri}' has already been set up")
-        next
-      rescue TargetNotFoundError
-        # Pass-thru, this means that we haven't set up the master VM
-      end
+  desc 'Start the PE container environment'
+  task :start_containers do
+    unless system('docker-compose -f ./spec/support/docker/pe_master/docker-compose.yml -p acceptance up --build -d')
+      raise 'docker-compose failed to start PE.'
     end
 
-    provision_list = ENV['PROVISION_LIST'] || 'acceptance'
-    Rake::Task['litmus:provision_list'].invoke(provision_list)
-  end
+    puts 'Wait for all docker containers to finish starting.'
 
-  # TODO: This should be refactored to use the https://github.com/puppetlabs/puppetlabs-peadm
-  # module for PE setup
-  desc 'Sets up PE on the master'
-  task :setup_pe do
-    master.bolt_run_script('spec/support/acceptance/install_pe.sh')
-    # Setup hiera-eyaml config
+    loop do
+      healthy = true
+      state = `docker ps --no-trunc -a --format '{{ json . }}'`
+      state.split("\n").each do |instance|
+        data = JSON.parse(instance)
+        healthy = false unless data['Status'].include?('(healthy)')
+      end
+
+      break if healthy
+    end
+
+    puts 'Copy inventory to project root'
+    FileUtils.cp('./spec/support/docker/inventory.yaml','./inventory.yaml')
+    puts 'Copy eyaml support files'
     master.run_shell('rm -rf /etc/eyaml')
     master.bolt_upload_file('spec/support/common/hiera-eyaml', '/etc/eyaml')
+    puts 'setup RBAC token'
+    token_command = <<-HERE
+      /bin/bash -c 'echo \'pupperware\' | puppet access login --lifetime 1y \
+      --username admin \
+      --service-url https://pe-console-services:4433/rbac-api \
+      --ca-cert /opt/puppetlabs/server/data/puppetserver/certs/certs/ca.pem'
+    HERE
+    require 'pry'; binding.pry;
+    master.run_shell(token_command)
   end
 
   desc 'Sets up the ServiceNow instance'
@@ -128,7 +136,7 @@ namespace :acceptance do
       # then the script will remove the old instance before replacing it with the new
       # one.
       puts("Starting the mock ServiceNow instance at the master (#{master.uri})")
-      master.bolt_upload_file('./spec/support/acceptance/servicenow', '/tmp/servicenow')
+      master.bolt_upload_file('./spec/support/docker/servicenow', '/tmp/servicenow')
       master.bolt_run_script('spec/support/acceptance/start_mock_servicenow_instance.sh')
       instance, user, password = "#{master.uri}:1080", 'mock_user', 'mock_password'
     else
@@ -137,8 +145,7 @@ namespace :acceptance do
       raise 'The ServiceNow username must be provided' if user.nil?
       raise 'The ServiceNow password must be provided' if password.nil?
     end
-
-    # Update the inventory file
+   # Update the inventory file
     puts('Updating the inventory.yaml file with the ServiceNow instance credentials')
     inventory_hash = LitmusHelpers.inventory_hash_from_inventory_file
     servicenow_group = inventory_hash['groups'].find { |g| g['name'] =~ %r{servicenow} }
@@ -168,11 +175,9 @@ namespace :acceptance do
   end
 
   desc 'Set up the test infrastructure'
-  task :setup do
+  task :setup, [:runner_platform] do
     tasks = [
-      :provision_vms,
-      :setup_pe,
-      :setup_servicenow_instance,
+      :start_containers,
       :install_module,
     ]
 
@@ -187,7 +192,7 @@ namespace :acceptance do
   desc 'Runs the tests'
   task :run_tests do
     puts("Running the tests ...\n")
-    unless system('bundle exec rspec ./spec/acceptance')
+    unless system('bundle exec rspec ./spec/acceptance --format documentation')
       # system returned false which means rspec failed. So exit 1 here
       exit 1
     end
@@ -196,7 +201,9 @@ namespace :acceptance do
   desc 'Teardown the setup'
   task :tear_down do
     puts("Tearing down the test infrastructure ...\n")
-    Rake::Task['litmus:tear_down'].invoke(master.uri)
+    unless system('docker-compose -f ./spec/support/docker/pe_master/docker-compose.yml -p acceptance down --volumes')
+      raise 'docker-compose failed to tear down compose environment.'
+    end
     FileUtils.rm_f('inventory.yaml')
   end
 
@@ -205,8 +212,8 @@ namespace :acceptance do
     begin
       Rake::Task['acceptance:setup'].invoke
       Rake::Task['acceptance:run_tests'].invoke 
-    ensure
-      Rake::Task['acceptance:tear_down'].invoke
+    # ensure
+    #   Rake::Task['acceptance:tear_down'].invoke
     end
   end
 end

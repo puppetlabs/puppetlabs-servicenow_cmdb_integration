@@ -74,6 +74,10 @@ class MockServiceNowInstance < Sinatra::Base
     nil
   end
 
+  get '/healthcheck' do
+    "healthy"
+  end
+
   helpers do
     def tables
       settings.tables

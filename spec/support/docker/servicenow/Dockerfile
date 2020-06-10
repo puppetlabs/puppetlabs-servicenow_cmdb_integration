@@ -10,6 +10,8 @@ RUN bundle install --without development test
 
 ADD mock_instance.rb ./
 
+RUN apk --no-cache add curl
+
 EXPOSE 1080
 
 CMD ["bundle", "exec", "ruby", "./mock_instance.rb"]

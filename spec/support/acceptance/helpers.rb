@@ -88,22 +88,22 @@ module CMDBHelpers
 
   def create_target_record(target, fields, table: 'cmdb_ci', certname_field: 'fqdn')
     record = get_target_record(target, table: table, certname_field: certname_field)
-    unless record.nil?
-      raise "On #{servicenow_instance.uri} with table = #{table}, certname_field = #{certname_field}, a record already exists for #{target.uri}: #{record['sys_id']}"
-
+    if record.nil?
+      uri = service_name(target) || target.uri
+      task_result = servicenow_instance.run_bolt_task(
+        'servicenow_tasks::create_record',
+        { 'table' => table, 'fields' => fields.merge(certname_field => uri) }
+      )
+      task_result.result['result']
     end
-    task_result = servicenow_instance.run_bolt_task(
-      'servicenow_tasks::create_record',
-      { 'table' => table, 'fields' => fields.merge(certname_field => target.uri) }
-    )
-    task_result.result['result']
   end
   module_function :create_target_record
 
   def get_target_record(target, table: 'cmdb_ci', certname_field: 'fqdn')
+    uri = service_name(target) || target.uri
     task_result = servicenow_instance.run_bolt_task(
       'servicenow_tasks::get_records',
-      { 'table' => table, 'url_params' => { certname_field => target.uri, 'sysparm_display_value' => true } },
+      { 'table' => table, 'url_params' => { certname_field => uri, 'sysparm_display_value' => true } },
     )
     satisfying_records = task_result.result['result']
     return nil if satisfying_records.empty?
@@ -126,4 +126,18 @@ module CMDBHelpers
     )
   end
   module_function :delete_target_record
+
+  def service_name(target)
+    inventory = LitmusHelpers.inventory_hash_from_inventory_file
+    vars = LitmusHelpers.vars_from_node(inventory, target.uri)
+    vars['service_names'].first rescue nil
+  end
+  module_function :service_name
+
+  def code_dir(target)
+    inventory = LitmusHelpers.inventory_hash_from_inventory_file
+    vars = LitmusHelpers.vars_from_node(inventory, target.uri)
+    vars['code_dir'].first rescue nil
+  end
+  module_function :code_dir
 end

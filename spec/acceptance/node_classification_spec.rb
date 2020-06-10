@@ -3,6 +3,7 @@ require 'json'
 
 describe 'node classification' do
   let(:params) do
+    require 'pry'; binding.pry;
     servicenow_config = servicenow_instance.bolt_config['remote']
 
     {
@@ -15,8 +16,9 @@ describe 'node classification' do
   # Unfortunately, let(...) is only allowed for 'it'/'before(:each)'/'after(:each)'
   # blocks. Since these are also used in 'before(:all)'/'after(:all)' blocks, we
   # make these constants instead.
+  CODE_DIR_BASE_PATH = "#{CMDBHelpers.code_dir(master) || "/etc/puppetlabs/code/environments"}".freeze
   TEST_ENVIRONMENT = 'node_classification_tests'.freeze
-  TEST_ENVIRONMENT_CODE_DIR = "/etc/puppetlabs/code/environments/#{TEST_ENVIRONMENT}".freeze
+  TEST_ENVIRONMENT_CODE_DIR = "#{CODE_DIR_BASE_PATH}/#{TEST_ENVIRONMENT}".freeze
 
   before(:all) do
     # Setup the test environment. Here are the steps:
@@ -36,19 +38,21 @@ describe 'node classification' do
         'File',
         "#{TEST_ENVIRONMENT_CODE_DIR}/modules",
         ensure: 'link',
-        target: '/etc/puppetlabs/code/environments/production/modules',
+        target: "#{CODE_DIR_BASE_PATH}/production/modules",
       ),
       declare(
         'node_group',
         TEST_ENVIRONMENT,
         ensure: 'present',
-        parent: 'All Environments',
+        parent: 'All Nodes',
         environment: TEST_ENVIRONMENT,
         override_environment: true,
       ),
     )
     master.apply_manifest(setup_manifest)
-    master.run_shell("puppet task run servicenow_cmdb_integration::add_environment_rule --params '{\"group_names\": [\"#{TEST_ENVIRONMENT}\"]}' --nodes #{master.uri}")
+    master_hostname = CMDBHelpers.service_name(master) || master.uri
+    require 'pry'; binding.pry;
+    master.run_shell("puppet task run servicenow_cmdb_integration::add_environment_rule --params '{\"group_names\": [\"#{TEST_ENVIRONMENT}\"]}' --nodes #{master_hostname}")
   end
   after(:all) do
     # Teardown the test environment

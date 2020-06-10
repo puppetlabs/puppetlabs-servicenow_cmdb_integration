@@ -1,0 +1,32 @@
+---
+version: 2
+groups:
+- name: docker_nodes
+  targets:
+  - uri: acceptance_puppet_1
+    config:
+      transport: docker
+    vars:
+      roles:
+      - master
+      service_names:
+      - puppet
+      code_dir:
+      - /opt/puppetlabs/server/data/code-manager/code/environments
+  - uri: acceptance_pe-orchestration-services_1
+    config:
+      transport: docker
+    vars:
+      service_names:
+      - pe-orchestration-services
+- name: servicenow_nodes
+  targets:
+  - uri: localhost:1080
+    config:
+      transport: remote
+      remote:
+        user: mock_user
+        password: mock_password
+    vars:
+      roles:
+      - servicenow_instance

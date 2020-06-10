@@ -5,7 +5,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     servicenow_config = servicenow_instance.bolt_config['remote']
 
     {
-      instance: servicenow_instance.uri,
+      instance: 'acceptance_servicenow_1:1080',
       user: servicenow_config['user'],
       password: servicenow_config['password'],
     }
@@ -14,15 +14,6 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_cmdb_integration', params))
   end
 
-  before(:all) do
-    manifest = <<-MANIFEST
-      $trusted_json = inline_template("<%= @trusted.to_json %>")
-      notify { "trusted external data":
-        message => "#{JSON_SEPARATOR}${trusted_json}#{JSON_SEPARATOR}"
-      }
-    MANIFEST
-    set_sitepp_content(manifest)
-  end
   after(:all) do
     set_sitepp_content('')
   end
@@ -38,6 +29,17 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
   end
 
   shared_context 'setup cmdb' do |cmdb_table = 'cmdb_ci', certname_field = 'fqdn'|
+    before(:all) do
+      master.run_shell('mkdir -p /opt/puppetlabs/server/data/code-manager/code/environments/production/manifests')
+      manifest = <<-MANIFEST
+        $trusted_json = inline_template("<%= @trusted.to_json %>")
+        notify { "trusted external data":
+          message => "#{TRUSTED_JSON_SEPARATOR}${trusted_json}#{TRUSTED_JSON_SEPARATOR}"
+        }
+      MANIFEST
+      set_sitepp_content(manifest)
+    end
+
     before(:each) do
       fields_template = JSON.parse(File.read('spec/support/acceptance/cmdb_record_template.json'))
       # Store the CMDB table in an arbitrary (String) field so that tests can assert on it
@@ -54,7 +56,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
 
     it "contains the node's CMDB record in the 'cmdb_ci' table obtained by querying the 'fqdn' field" do
       result = trigger_puppet_run(master)
-      trusted_json = parse_json(result.stdout, 'trusted_json')
+      trusted_json = parse_trusted_json(result.stdout)
       cmdb_record = CMDBHelpers.get_target_record(master)
       expect(trusted_json['external']['servicenow']).to eql(cmdb_record)
     end
@@ -89,11 +91,17 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     it "queries the node's CMDB record using the user-specified certname field" do
       result = trigger_puppet_run(master)
       trusted_json = parse_json(result.stdout, 'trusted_json')
-      expect(trusted_json['external']['servicenow']['asset_tag']).to eql(master.uri)
+      expected_asset_tag = CMDBHelpers.service_name(master) || master.uri
+      expect(trusted_json['external']['servicenow']['asset_tag']).to eql(expected_asset_tag)
     end
   end
 
   context 'user specifies a hiera-eyaml encrypted password' do
+
+    # before(:all) do
+    #   setup_eyaml
+    # end
+
     let(:params) do
       default_params = super()
       password = default_params.delete(:password)
@@ -106,7 +114,8 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     it 'still works' do
       result = trigger_puppet_run(master)
       trusted_json = parse_json(result.stdout, 'trusted_json')
-      expect(trusted_json['external']['servicenow']['fqdn']).to eql(master.uri)
+      expected_asset_tag = CMDBHelpers.service_name(master) || master.uri
+      expect(trusted_json['external']['servicenow']['fqdn']).to eql(expected_asset_tag)
     end
   end
 end
