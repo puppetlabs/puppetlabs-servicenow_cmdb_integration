@@ -8,18 +8,18 @@ require 'hashdiff'
 require_relative '../../../files/servicenow.rb'
 
 describe 'servicenow' do
-  let(:api_response) { File.read('./spec/support/files/valid_api_response.json') }
+  let(:cmdb_api_response) { File.read('./spec/support/files/valid_cmdb_api_response.json') }
   let(:config) { YAML.load_file('./spec/support/files/default_config.yaml') }
   let(:node_data_hash) { JSON.parse(servicenow('blah'))['servicenow'] }
   let(:expected_response_json) { File.read('./spec/support/files/servicenow_rb_response.json') }
 
   before(:each) do
     allow(YAML).to receive(:load_file).with(%r{servicenow\.yaml}).and_return(config)
-    allow(Net::HTTP).to receive(:start).with(config['instance'], 443, use_ssl: true, verify_mode: 0).and_return(api_response)
+    allow(Net::HTTP).to receive(:start).with(config['instance'], 443, use_ssl: true, verify_mode: 0).and_return(cmdb_api_response)
   end
 
   context 'node does not exist' do
-    let(:api_response) do
+    let(:cmdb_api_response) do
       '{"result": []}'
     end
 
@@ -30,8 +30,8 @@ describe 'servicenow' do
 
   context 'node exists' do
     it "returns the node's parsed CMDB record" do
-      expected_response = JSON.parse(expected_response_json)['servicenow']
-      expect(Hashdiff.diff(expected_response, node_data_hash)).to be_empty
+      expected_cmdb_record = JSON.parse(cmdb_api_response)['result'][0]
+      expect(node_data_hash).to eql(expected_cmdb_record)
     end
 
     context 'CMDB record contains classification fields' do
@@ -49,7 +49,7 @@ describe 'servicenow' do
           'class::bar' => {},
         }
       end
-      let(:api_response) do
+      let(:cmdb_api_response) do
         response = JSON.parse(super())
 
         cmdb_record = response['result'][0]

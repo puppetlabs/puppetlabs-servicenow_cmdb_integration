@@ -22,5 +22,4 @@ jobs:
         gem install bundler
         bundler -v
         bundle install --jobs 4 --retry 2 --path .bundle/gems
-        bundle exec rake litmus:provision_list[$PROVISION_LIST]
-        bundle exec rake litmus:acceptance:parallel
+        bundle exec rake acceptance:ci_run_tests

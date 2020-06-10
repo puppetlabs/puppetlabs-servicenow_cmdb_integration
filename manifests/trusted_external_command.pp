@@ -69,10 +69,6 @@ class servicenow_cmdb_integration::trusted_external_command (
     },
   ])
 
-  unless Service['pe-puppetserver'] {
-    service {'pe-puppetserver':}
-  }
-
   ini_setting { 'puppetserver puppetconf trusted external script':
     ensure  => present,
     path    => '/etc/puppetlabs/puppet/puppet.conf',
