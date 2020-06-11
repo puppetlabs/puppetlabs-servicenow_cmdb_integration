@@ -78,12 +78,16 @@ end
 
 # Abstract away the API calls.
 class ServiceNowRequest
-  def initialize(uri, http_verb, body, user, password)
+  def initialize(uri, http_verb, body, user, password, oauth_token)
+    unless oauth_token || (user && password)
+      raise ArgumentError, 'user/password or oauth_token must be specified'
+    end
     @uri = URI.parse(uri)
     @http_verb = http_verb.capitalize
     @body = body.to_json unless body.nil?
     @user = user
     @password = password
+    @oauth_token = oauth_token
   end
 
   def response
@@ -98,8 +102,11 @@ class ServiceNowRequest
       # Add uri, fields and authentication to request
       request = request_class.new("#{@uri.path}?#{@uri.query}", header)
       request.body = @body
-      request.basic_auth(@user, @password)
-      # Make request to ServiceNow
+      if @oauth_token
+        request['Authorization'] = "Bearer #{@oauth_token}"
+      else
+        request.basic_auth(@user, @password)
+      end
       response = http.request(request)
       # Parse and print response
       response.body
@@ -115,6 +122,7 @@ def servicenow(certname)
   instance          = servicenow_config['instance']
   username          = servicenow_config['user']
   password          = servicenow_config['password']
+  oauth_token       = servicenow_config['oauth_token']
   table             = servicenow_config['table']
   certname_field    = servicenow_config['certname_field']
   classes_field     = servicenow_config['classes_field']
@@ -148,13 +156,21 @@ def servicenow(certname)
     # Note that ServiceNow passwords can't contain a newline so chomping's still OK
     # for plain-text passwords.
     Hiera::Backend::Eyaml::Options.set(hiera_eyaml_config[:options])
-    tokens = Hiera::Backend::Eyaml::Parser::ParserFactory.hiera_backend_parser.parse(password.chomp)
-    password = tokens.map(&:to_plain_text).join
+    parser = Hiera::Backend::Eyaml::Parser::ParserFactory.hiera_backend_parser
+    if password
+      password_tokens = parser.parse(password.chomp)
+      password = password_tokens.map(&:to_plain_text).join
+    end
+
+    if oauth_token
+      oauth_token_tokens = parser.parse(oauth_token.chomp)
+      oauth_token = oauth_token_tokens.map(&:to_plain_text).join
+    end
   end
 
   uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
 
-  cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password)
+  cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
 
   cmdb_record = JSON.parse(cmdb_request.response)['result'][0] || {}
   parse_classification_fields(cmdb_record, classes_field, environment_field)
