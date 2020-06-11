@@ -2,29 +2,8 @@
 
 require './spec/support/acceptance/helpers.rb'
 
-RSpec.configure do |c|
+RSpec.configure do |_|
   include TargetHelpers
-
-  # Configure all nodes in nodeset
-  c.before :suite do
-    inventory_hash = LitmusHelpers.inventory_hash_from_inventory_file
-    servicenow_instance_uri = servicenow_instance.uri
-    servicenow_bolt_config = LitmusHelpers.config_from_node(inventory_hash, servicenow_instance_uri)
-    servicenow_config = servicenow_bolt_config['remote']
-    manifest = <<-MANIFEST
-   class { "servicenow_cmdb_integration":
-     instance => "#{servicenow_instance_uri}",
-     user     => "#{servicenow_config['user']}",
-     password => "#{servicenow_config['password']}",
-   }
-    MANIFEST
-
-    set_sitepp_content(manifest)
-    trigger_puppet_run(master)
-    # Test idempotency
-    trigger_puppet_run(master, acceptable_exit_codes: [0])
-    set_sitepp_content('')
-  end
 end
 
 # TODO: This will cause some problems if we run the tests
@@ -57,4 +36,21 @@ def parse_trusted_json(puppet_output)
   JSON.parse(trusted_json)
 rescue => e
   raise "Failed to parse the trusted JSON: #{e}"
+end
+
+def declare(type, title, params = {})
+  params = params.map do |name, value|
+    value = "'#{value}'" if value.is_a?(String)
+    "  #{name} => #{value},"
+  end
+
+  <<-HERE
+  #{type} { '#{title}':
+  #{params.join("\n")}
+  }
+  HERE
+end
+
+def to_manifest(*declarations)
+  declarations.join("\n")
 end

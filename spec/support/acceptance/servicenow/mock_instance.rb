@@ -10,8 +10,10 @@ class MockServiceNowInstance < Sinatra::Base
   set :bind, '0.0.0.0'
   set :port, 1080
 
-  # Initialize the CMDB table
-  set :cmdb_table, {}
+  # Initialize the tables
+  set :tables,
+      'cmdb_ci' => {},
+      'cmdb_ci_acc' => {}
 
   # Configure https
   set :server_settings,
@@ -38,7 +40,7 @@ class MockServiceNowInstance < Sinatra::Base
     end
 
     fields['sys_id'] = SecureRandom.uuid.delete('-')
-    cmdb_table[fields['sys_id']] = fields
+    table(table_name)[fields['sys_id']] = fields
     to_response(fields)
   end
 
@@ -53,7 +55,7 @@ class MockServiceNowInstance < Sinatra::Base
     end
 
     # Select all records 'record' where query_hash is a subhash of 'record'
-    satisfying_records = cmdb_table.values.select do |record|
+    satisfying_records = table(table_name).values.select do |record|
       (query_hash.to_a - record.to_a).empty?
     end
     to_response(satisfying_records)
@@ -61,20 +63,24 @@ class MockServiceNowInstance < Sinatra::Base
 
   get '/api/now/table/:table_name/:sys_id' do |table_name, sys_id|
     validate_table(table_name)
-    validate_record(sys_id)
-    to_response(cmdb_table[sys_id])
+    validate_record(table_name, sys_id)
+    to_response(table(table_name)[sys_id])
   end
 
   delete '/api/now/table/:table_name/:sys_id' do |table_name, sys_id|
     validate_table(table_name)
-    validate_record(sys_id)
-    cmdb_table.delete(sys_id)
+    validate_record(table_name, sys_id)
+    table(table_name).delete(sys_id)
     nil
   end
 
   helpers do
-    def cmdb_table
-      settings.cmdb_table
+    def tables
+      settings.tables
+    end
+
+    def table(table_name)
+      tables[table_name] ||= {}
     end
 
     def to_response(result)
@@ -92,11 +98,11 @@ class MockServiceNowInstance < Sinatra::Base
     end
 
     def validate_table(table_name)
-      halt 400, to_error_response("Invalid table #{table_name}") unless table_name == 'cmdb_ci'
+      halt 400, to_error_response("Invalid table #{table_name}") unless tables.include?(table_name)
     end
 
-    def validate_record(sys_id)
-      halt 400, to_error_response("Invalid record #{sys_id}") unless cmdb_table[sys_id]
+    def validate_record(table_name, sys_id)
+      halt 400, to_error_response("Invalid record #{sys_id}") unless table(table_name)[sys_id]
     end
   end
 end

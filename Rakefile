@@ -115,14 +115,18 @@ namespace :acceptance do
   desc 'Sets up PE on the master'
   task :setup_pe do
     master.bolt_run_script('spec/support/acceptance/install_pe.sh')
+    # Setup hiera-eyaml config
+    master.run_shell('rm -rf /etc/eyaml')
+    master.bolt_upload_file('spec/support/common/hiera-eyaml', '/etc/eyaml')
   end
 
   desc 'Sets up the ServiceNow instance'
   task :setup_servicenow_instance, [:instance, :user, :password] do |_, args|
     instance, user, password = args[:instance], args[:user], args[:password]
     if instance.nil?
-      # Start the mock ServiceNow instance. Note that the script's already idempotent
-      # so it will noop if the instance is already started.
+      # Start the mock ServiceNow instance. If an instance has already been started,
+      # then the script will remove the old instance before replacing it with the new
+      # one.
       puts("Starting the mock ServiceNow instance at the master (#{master.uri})")
       master.bolt_upload_file('./spec/support/acceptance/servicenow', '/tmp/servicenow')
       master.bolt_run_script('spec/support/acceptance/start_mock_servicenow_instance.sh')
@@ -158,21 +162,6 @@ namespace :acceptance do
     write_to_inventory_file(inventory_hash, 'inventory.yaml')
   end
 
-  desc 'Sets up the ServiceNow CMDB with entries for each VM'
-  task :setup_servicenow_cmdb do
-    record = CMDBHelpers.get_target_record(master)
-    unless record.nil?
-      puts("A CMDB record's already been created for the master (sys_id = #{record['sys_id']})")
-      next
-    end
-
-    # CMDB record doesn't exist so create it
-    puts("Creating the master's CMDB record ...")
-    fields_template = JSON.parse(File.read('spec/support/acceptance/cmdb_record_template.json'))
-    fields = CMDBHelpers.create_record(fields_template.merge('fqdn' => master.uri))
-    puts("Created the CMDB record (sys_id = #{fields['sys_id']})")
-  end
-
   desc 'Installs the module on the master'
   task :install_module do
     Rake::Task['litmus:install_module'].invoke(master.uri)
@@ -184,7 +173,6 @@ namespace :acceptance do
       :provision_vms,
       :setup_pe,
       :setup_servicenow_instance,
-      :setup_servicenow_cmdb,
       :install_module,
     ]
 
@@ -205,30 +193,10 @@ namespace :acceptance do
     end
   end
 
-  desc 'Teardown the ServiceNow CMDB'
-  task :tear_down_servicenow_cmdb do
-    CMDBHelpers.delete_target_record(master)
-  end
-
   desc 'Teardown the setup'
   task :tear_down do
     puts("Tearing down the test infrastructure ...\n")
-
-    # Teardown the test CMDB
-    begin
-      using_mock_instance = servicenow_instance.uri =~ Regexp.new(Regexp.escape(master.uri))
-      unless using_mock_instance
-        Rake::Task['acceptance:tear_down_servicenow_cmdb'].invoke
-      end
-    rescue TargetNotFoundError
-      # Pass-thru, this means that the tear_down task was called before
-      # the ServiceNow instance was setup
-    end
-
-    # Teardown the master
     Rake::Task['litmus:tear_down'].invoke(master.uri)
-
-    # Delete the inventory file
     FileUtils.rm_f('inventory.yaml')
   end
 
