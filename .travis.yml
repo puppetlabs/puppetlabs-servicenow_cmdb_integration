@@ -15,11 +15,13 @@ before_install:
   - bundle -v
 script: |
   echo helloworld
-  cd spec/support/docker/pe_master
+  git clone git@github.com:puppetlabs/pupperware-commercial.git
+  cd pupperware-commercial
   docker-compose up -d
   healthy=0
   while [ $healthy -lt 6 ]; do docker ps --all && healthy=`docker ps --no-trunc -a --format '{{ json . }}' | jq '{status: .Status}' | grep healthy | wc -l` && sleep 20; done
   docker-compose exec puppet puppet agent -t
+
 bundler_args: --without system_tests
 rvm:
   - 2.5.7
