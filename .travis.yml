@@ -6,9 +6,9 @@ services: docker
 before_install:
 - openssl aes-256-cbc -K $encrypted_acab821a6530_key -iv $encrypted_acab821a6530_iv
   -in pupperware-commercial-deploy-key.enc -out pupperware-commercial-deploy-key -d
-- chmod 0400 pupperware-commercial-deploy-key.pem
+- chmod 0400 pupperware-commercial-deploy-key
 - eval "$(ssh-agent -s)"
-- ssh-add pupperware-commercial-deploy-key.pem
+- ssh-add pupperware-commercial-deploy-key
 - bundle -v
 - rm -f Gemfile.lock
 - "# Update system gems if requested. This is useful to temporarily workaround troubles
