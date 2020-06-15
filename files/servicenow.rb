@@ -91,7 +91,7 @@ class ServiceNowRequest
 end
 
 def servicenow(certname)
-  servicenow_config = YAML.load_file('/etc/puppetlabs/puppet/servicenow.yaml')
+  servicenow_config = YAML.load_file('/etc/puppetlabs/puppet/servicenow_cmdb.yaml')
 
   instance          = servicenow_config['instance']
   username          = servicenow_config['user']

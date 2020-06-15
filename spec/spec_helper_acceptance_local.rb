@@ -12,7 +12,7 @@ RSpec.configure do |c|
     servicenow_bolt_config = LitmusHelpers.config_from_node(inventory_hash, servicenow_instance_uri)
     servicenow_config = servicenow_bolt_config['remote']
     manifest = <<-MANIFEST
-   class { "servicenow_cmdb_integration::trusted_external_command":
+   class { "servicenow_cmdb_integration":
      instance => "#{servicenow_instance_uri}",
      user     => "#{servicenow_config['user']}",
      password => "#{servicenow_config['password']}",

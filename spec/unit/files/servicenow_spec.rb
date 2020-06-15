@@ -14,7 +14,7 @@ describe 'servicenow' do
   let(:expected_response_json) { File.read('./spec/support/files/servicenow_rb_response.json') }
 
   before(:each) do
-    allow(YAML).to receive(:load_file).with(%r{servicenow\.yaml}).and_return(config)
+    allow(YAML).to receive(:load_file).with(%r{servicenow_cmdb\.yaml}).and_return(config)
     allow(Net::HTTP).to receive(:start).with(config['instance'], 443, use_ssl: true, verify_mode: 0).and_return(cmdb_api_response)
   end
 
@@ -131,8 +131,8 @@ describe 'servicenow' do
   end
 
   context 'loading ServiceNow config' do
-    it 'reads the config from /etc/puppetlabs/puppet/servicenow.yaml' do
-      expect(YAML).to receive(:load_file).with('/etc/puppetlabs/puppet/servicenow.yaml').and_return(config)
+    it 'reads the config from /etc/puppetlabs/puppet/servicenow_cmdb.yaml' do
+      expect(YAML).to receive(:load_file).with('/etc/puppetlabs/puppet/servicenow_cmdb.yaml').and_return(config)
       servicenow('example.puppet.com')
     end
 

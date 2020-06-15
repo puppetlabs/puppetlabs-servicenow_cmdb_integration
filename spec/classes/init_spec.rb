@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe 'servicenow_cmdb_integration::trusted_external_command' do
+describe 'servicenow_cmdb_integration' do
   let(:pre_condition) do
     <<-MANIFEST
     service { 'pe-puppetserver':

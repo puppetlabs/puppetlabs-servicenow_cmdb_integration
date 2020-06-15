@@ -93,7 +93,7 @@ module CMDBHelpers
   def get_target_record(target)
     task_result = servicenow_instance.run_bolt_task(
       'servicenow_tasks::get_records',
-      { 'table' => 'cmdb_ci', 'fields' => { 'fqdn' => target.uri } },
+      { 'table' => 'cmdb_ci', 'url_params' => { 'fqdn' => target.uri, 'sysparm_display_value' => true } },
     )
     satisfying_records = task_result.result['result']
     return nil if satisfying_records.empty?
