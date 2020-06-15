@@ -20,6 +20,11 @@ class Target
     @uri = uri
   end
 
+  def bolt_config
+    inventory_hash = LitmusHelpers.inventory_hash_from_inventory_file
+    LitmusHelpers.config_from_node(inventory_hash, @uri)
+  end
+
   # Make sure that ENV['TARGET_HOST'] is set to uri
   # before each PuppetLitmus method call. This makes it
   # so if we have an array of targets, say 'agents', then
@@ -81,35 +86,43 @@ class CMDBRecordRetrievalError < StandardError; end
 module CMDBHelpers
   extend TargetHelpers
 
-  def create_record(fields)
+  def create_target_record(target, fields, table: 'cmdb_ci', certname_field: 'fqdn')
+    record = get_target_record(target, table: table, certname_field: certname_field)
+    unless record.nil?
+      raise "On #{servicenow_instance.uri} with table = #{table}, certname_field = #{certname_field}, a record already exists for #{target.uri}: #{record['sys_id']}"
+
+    end
     task_result = servicenow_instance.run_bolt_task(
       'servicenow_tasks::create_record',
-      { 'table' => 'cmdb_ci', 'fields' => fields }
+      { 'table' => table, 'fields' => fields.merge(certname_field => target.uri) }
     )
     task_result.result['result']
   end
-  module_function :create_record
+  module_function :create_target_record
 
-  def get_target_record(target)
+  def get_target_record(target, table: 'cmdb_ci', certname_field: 'fqdn')
     task_result = servicenow_instance.run_bolt_task(
       'servicenow_tasks::get_records',
-      { 'table' => 'cmdb_ci', 'url_params' => { 'fqdn' => target.uri, 'sysparm_display_value' => true } },
+      { 'table' => table, 'url_params' => { certname_field => target.uri, 'sysparm_display_value' => true } },
     )
     satisfying_records = task_result.result['result']
     return nil if satisfying_records.empty?
     if satisfying_records.length > 1
-      raise "On #{servicenow_instance.uri}, more than one record exists for #{target.uri}: #{satisfying_records}"
+      sys_ids = satisfying_records.map do |record|
+        record['sys_id']
+      end
+      raise "On #{servicenow_instance.uri} with table = #{table}, certname_field = #{certname_field}, more than one record exists for #{target.uri}: #{sys_ids.join(', ')}"
     end
     satisfying_records.first
   end
   module_function :get_target_record
 
-  def delete_target_record(target)
-    record = get_target_record(target)
+  def delete_target_record(target, table: 'cmdb_ci', certname_field: 'fqdn')
+    record = get_target_record(target, table: table, certname_field: certname_field)
     return if record.nil?
     servicenow_instance.run_bolt_task(
       'servicenow_tasks::delete_record',
-      { 'table' => 'cmdb_ci', 'sys_id' => record['sys_id'] },
+      { 'table' => table, 'sys_id' => record['sys_id'] },
     )
   end
   module_function :delete_target_record

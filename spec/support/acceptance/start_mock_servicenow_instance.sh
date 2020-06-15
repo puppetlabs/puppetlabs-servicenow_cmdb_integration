@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 function cleanup() {
   # bolt_upload_file isn't idempotent, so remove this directory
   # to ensure that later invocations of the setup_servicenow_instance
@@ -20,8 +22,8 @@ id=`docker ps -q -f name=mock_servicenow_instance -f status=running`
 
 if [ ! -z "$id" ]
 then
-  echo 'Mock ServiceNow container is already running'
-  exit 0
+  echo "Killing the current mock ServiceNow container (id = ${id}) ..."
+  docker rm --force ${id}
 fi
 
 docker build /tmp/servicenow -t mock_servicenow_instance
