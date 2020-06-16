@@ -27,15 +27,15 @@ def trigger_puppet_run(target, acceptable_exit_codes: [0, 2])
   result
 end
 
-TRUSTED_JSON_SEPARATOR = '<TRUSTED_JSON>'.freeze
-def parse_trusted_json(puppet_output)
-  trusted_json = puppet_output.split(TRUSTED_JSON_SEPARATOR)[1]
-  if trusted_json.nil?
-    raise "Puppet output does not contain the expected '#{TRUSTED_JSON_SEPARATOR}<trusted_json>#{TRUSTED_JSON_SEPARATOR}' output"
+JSON_SEPARATOR = '<JSON>'.freeze
+def parse_json(puppet_output, desc)
+  raw_json = puppet_output.split(JSON_SEPARATOR)[1]
+  if raw_json.nil?
+    raise "Puppet output does not contain the expected '#{JSON_SEPARATOR}<#{desc}>#{JSON_SEPARATOR}' output"
   end
-  JSON.parse(trusted_json)
+  JSON.parse(raw_json)
 rescue => e
-  raise "Failed to parse the trusted JSON: #{e}"
+  raise "Failed to parse the #{desc} JSON: #{e}\nPuppet output:\n#{puppet_output}"
 end
 
 def declare(type, title, params = {})

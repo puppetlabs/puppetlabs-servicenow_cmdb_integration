@@ -20,7 +20,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     manifest = <<-MANIFEST
       $trusted_json = inline_template("<%= @trusted.to_json %>")
       notify { "trusted external data":
-        message => "#{TRUSTED_JSON_SEPARATOR}${trusted_json}#{TRUSTED_JSON_SEPARATOR}"
+        message => "#{JSON_SEPARATOR}${trusted_json}#{JSON_SEPARATOR}"
       }
     MANIFEST
     set_sitepp_content(manifest)
@@ -56,7 +56,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
 
     it "contains the node's CMDB record in the 'cmdb_ci' table obtained by querying the 'fqdn' field" do
       result = trigger_puppet_run(master)
-      trusted_json = parse_trusted_json(result.stdout)
+      trusted_json = parse_json(result.stdout, 'trusted_json')
       cmdb_record = CMDBHelpers.get_target_record(master)
       expect(trusted_json['external']['servicenow']).to eql(cmdb_record)
     end
@@ -73,7 +73,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
 
     it "contains the node's CMDB record in the user-specified CMDB table" do
       result = trigger_puppet_run(master)
-      trusted_json = parse_trusted_json(result.stdout)
+      trusted_json = parse_json(result.stdout, 'trusted_json')
       # The 'default behavior' test already asserts full CMDB equality. Thus
       # to avoid propagating redundant failure messages in case the
       # "full CMDB equality" part of the script fails, it is enough to assert
@@ -90,7 +90,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
 
     it "queries the node's CMDB record using the user-specified certname field" do
       result = trigger_puppet_run(master)
-      trusted_json = parse_trusted_json(result.stdout)
+      trusted_json = parse_json(result.stdout, 'trusted_json')
       expect(trusted_json['external']['servicenow']['asset_tag']).to eql(master.uri)
     end
   end
@@ -107,7 +107,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
 
     it 'still works' do
       result = trigger_puppet_run(master)
-      trusted_json = parse_trusted_json(result.stdout)
+      trusted_json = parse_json(result.stdout, 'trusted_json')
       expect(trusted_json['external']['servicenow']['fqdn']).to eql(master.uri)
     end
   end
