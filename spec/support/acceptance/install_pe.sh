@@ -38,6 +38,9 @@ if [ -z "$version" ]; then
 
   ## Create and configure Certs
   echo "autosign = true" >> /etc/puppetlabs/puppet/puppet.conf
+
+  ## Setup the RBAC token
+  echo 'pie' | puppet access login --lifetime 1y --username admin
 fi
 
 version=`puppet --version`
