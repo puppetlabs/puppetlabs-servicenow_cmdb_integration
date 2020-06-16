@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 function cleanup() {
   # bolt_upload_file isn't idempotent, so remove this directory
   # to ensure that later invocations of the setup_servicenow_instance
@@ -17,6 +15,8 @@ if [ "$status" == "7" ]; then
     apt-get -qq update -y 1>&- 2>&-
     apt-get install -qq docker.io -y 1>&- 2>&-
 fi
+
+set -e
 
 id=`docker ps -q -f name=mock_servicenow_instance -f status=running`
 
