@@ -69,7 +69,7 @@ class servicenow_cmdb_integration (
     },
   ])
 
-  ini_setting { 'puppetserver puppetconf trusted external script':
+  ini_setting { 'puppetserver puppetconf trusted external command':
     ensure  => present,
     path    => '/etc/puppetlabs/puppet/puppet.conf',
     setting => 'trusted_external_command',
