@@ -13,8 +13,6 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
   let(:setup_manifest) do
     to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_cmdb_integration', params))
   end
-  let(:cmdb_table) { nil }
-  let(:certname_field) { 'fqdn' }
 
   before(:all) do
     manifest = <<-MANIFEST
