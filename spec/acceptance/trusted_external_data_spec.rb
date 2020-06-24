@@ -55,8 +55,18 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     it "contains the node's CMDB record in the 'cmdb_ci' table obtained by querying the 'fqdn' field" do
       result = trigger_puppet_run(master)
       trusted_json = parse_json(result.stdout, 'trusted_json')
+
       cmdb_record = CMDBHelpers.get_target_record(master)
-      expect(trusted_json['external']['servicenow']).to eql(cmdb_record)
+      # Remove the classification fields from the CMDB record since those will
+      # be tested separately
+      cmdb_record.delete('u_puppet_classes')
+      cmdb_record.delete('u_puppet_environment')
+
+      # We use 'include' instead of 'eql' because the 'servicenow' hash includes
+      # extra keys that are used to implement node classification. We don't care
+      # about those keys. All we care about is that the hash contains the node's
+      # CMDB record which is exactly what 'include' tests.
+      expect(trusted_json['external']['servicenow']).to include(cmdb_record)
     end
   end
 

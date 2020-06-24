@@ -117,15 +117,16 @@ describe 'node classification' do
   end
 
   context 'user specifies a different classes field' do
-    # Choose 'asset_tag' since it is a String
-    let(:params) { super().merge('classes_field' => 'asset_tag') }
+    # Choose 'comments' since it is a String and its max length is
+    # long enough to accept all of our inputs
+    let(:params) { super().merge('classes_field' => 'comments') }
 
-    include_examples 'classification tests', 'asset_tag'
+    include_examples 'classification tests', 'comments'
   end
 
   context 'user specifies a different environment field' do
-    let(:params) { super().merge('environment_field' => 'asset_tag') }
+    let(:params) { super().merge('environment_field' => 'comments') }
 
-    include_examples 'classification tests', 'u_puppet_classes', 'asset_tag'
+    include_examples 'classification tests', 'u_puppet_classes', 'comments'
   end
 end
