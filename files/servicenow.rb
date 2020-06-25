@@ -1,6 +1,8 @@
 #!/opt/puppetlabs/puppet/bin/ruby
 # rubocop:disable Style/GuardClause
 
+# managed by Puppet
+
 require 'openssl'
 require 'net/http'
 require 'yaml'
