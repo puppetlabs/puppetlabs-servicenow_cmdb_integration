@@ -6,6 +6,7 @@
       String $classes_field,
       String $environment_field
 | -%>
+# managed by Puppet
 ---
 instance: <%= $instance %>
 user: <%= $user %>
