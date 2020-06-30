@@ -34,7 +34,8 @@ def parse_classification_fields(cmdb_record, classes_field, environment_field)
       raise unless classes.is_a? Hash
 
       classes.each do |_puppet_class, params|
-        raise unless params.is_a? Hash
+        raise unless JSON.parse(params).is_a? Hash
+        classes[_puppet_class] = JSON.parse(params)
       end
     rescue
       raise "#{classes_field} must be a json serialization of type Hash[String, Hash[String, Any]]"
