@@ -34,7 +34,7 @@ def parse_classification_fields(cmdb_record, classes_field, environment_field)
       raise unless classes.is_a? Hash
 
       classes.each do |puppet_class, params|
-        params = "{}" if params.strip.empty?
+        params = '{}' if params.strip.empty?
         raise unless JSON.parse(params).is_a? Hash
         classes[puppet_class] = JSON.parse(params)
       end
