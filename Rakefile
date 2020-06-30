@@ -186,8 +186,10 @@ namespace :acceptance do
 
   desc 'Runs the tests'
   task :run_tests do
+    rspec_command  = 'bundle exec rspec ./spec/acceptance --format documentation'
+    rspec_command += ' --format RspecJunitFormatter --out rspec_junit_results.xml' if ENV['CI'] == 'true'
     puts("Running the tests ...\n")
-    unless system('bundle exec rspec ./spec/acceptance')
+    unless system(rspec_command)
       # system returned false which means rspec failed. So exit 1 here
       exit 1
     end
