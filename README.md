@@ -73,7 +73,7 @@ Here's what you have to do.
 | Field Name | Column Label | Column Name | Type |
 | --- | --- | --- | --- |
 | Puppet Environment | Puppet Environment | u\_puppet\_environment | String (Full UTF-8) |
-| Puppet Classes | Puppet Classes | u\_puppet\_classes | Name-Value Pairs |
+| Puppet Classes | Puppet Classes | u\_puppet\_classes | String (Full UTF-8) |
 
 
 </center>
