@@ -34,7 +34,7 @@ def parse_classification_fields(cmdb_record, classes_field, environment_field)
       raise unless classes.is_a? Hash
 
       classes.each do |puppet_class, params|
-        case params.class
+        case params
         when Hash
           # puppet_classes was a String field type so we've
           # already parsed the params hash
