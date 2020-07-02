@@ -45,9 +45,9 @@ Apply the `servicenow_cmdb_integration` class on all of your compilers. This loo
 
 ```
 class { 'servicenow_cmdb_integration':
-  instance => '<fqdn_of_snow_instance>',
-  user     => '<user>',
-  password => '<password>',
+  instance    => '<fqdn_of_snow_instance>',
+  user        => '<user>',
+  password    => '<password>',
 }
 ```
 
@@ -147,7 +147,7 @@ To setup the test infrastructure, use `bundle exec rake acceptance:setup`. This 
 
 Each setup step is its own task; `acceptance:setup`'s implementation consists of calling these tasks. Also, all setup tasks are idempotent. That means its safe to run them (and hence `acceptance:setup`) multiple times.
 
-**Note:** You can run the tests on a real ServiceNow instance. To do so, just invoke `bundle exec rake acceptance:setup_servicenow_instance[<fqdn>,<user>,<password>]`. This will update the `inventory.yaml` file with the actual ServiceNow instance credentials.
+**Note:** You can run the tests on a real ServiceNow instance. To do so, just invoke `bundle exec rake acceptance:setup_servicenow_instance[<fqdn>,<user>,<password>,<oauth_token>]`. This will update the `inventory.yaml` file with the actual ServiceNow instance credentials. The oauth tests will be skipped if no token is provided.
 
 To run the tests after setup, you can do `bundle exec rspec spec/acceptance`. To teardown the infrastructure, do `bundle exec rake acceptance:tear_down`.
 

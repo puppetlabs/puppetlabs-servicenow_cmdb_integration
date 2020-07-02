@@ -8,6 +8,9 @@
 #   The username of the account with permission to query data
 # @param [String] password
 #   The password of the account used to query data from Servicenow
+# @param [String] oauth_token
+#   An OAuth access token created in Servicenow that can be used in place of a
+#   username and password.
 # @param [String] table
 #   The ServiceNow CMDB table to query. Defaults to 'cmdb_ci'. Note that you
 #   should only set this if you'd like to query the information from a different
@@ -23,13 +26,31 @@
 #   to 'u_puppet_environment'.
 class servicenow_cmdb_integration (
   String $instance,
-  String $user,
-  String $password,
-  String $table             = 'cmdb_ci',
-  String $certname_field    = 'fqdn',
-  String $classes_field     = 'u_puppet_classes',
-  String $environment_field = 'u_puppet_environment',
+  Optional[String] $user        = undef,
+  Optional[String] $password    = undef,
+  Optional[String] $oauth_token = undef,
+  String $table                 = 'cmdb_ci',
+  String $certname_field        = 'fqdn',
+  String $classes_field         = 'u_puppet_classes',
+  String $environment_field     = 'u_puppet_environment',
 ) {
+
+  if (($user or $password) and $oauth_token) {
+    fail('please specify either user/password or oauth_token not both.')
+  }
+
+  unless ($user or $password or $oauth_token) {
+    fail('please specify either user/password or oauth_token')
+  }
+
+  if ($user or $password) {
+    if $user == undef {
+      fail('missing user')
+    } elsif $password == undef {
+      fail('missing password')
+    }
+  }
+
   # Warning: These values are parameterized here at the top of this file, but the
   # path to the yaml file is hard coded in the servicenow.rb script.
   $puppet_base = '/etc/puppetlabs/puppet'
@@ -61,6 +82,7 @@ class servicenow_cmdb_integration (
         instance          => $instance,
         user              => $user,
         password          => $password,
+        oauth_token       => $oauth_token,
         table             => $table,
         certname_field    => $certname_field,
         classes_field     => $classes_field,

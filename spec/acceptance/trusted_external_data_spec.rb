@@ -119,4 +119,33 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
       expect(trusted_json['external']['servicenow']['fqdn']).to eql(master.uri)
     end
   end
+
+  # This test provides coverage for oauth tokens both encrypted and not.
+  context 'user specifies a hiera-eyaml encrypted oauth token' do
+    # skip the oauth tests if we don't have a token to test with
+    servicenow_config = servicenow_instance.bolt_config['remote']
+    skip_oauth_tests = false
+    using_mock_instance = servicenow_instance.uri =~ Regexp.new(Regexp.escape(master.uri))
+    unless using_mock_instance
+      skip_oauth_tests = (servicenow_config['oauth_token']) ? false : true
+    end
+
+    puts 'Skipping this test becuase there is no token specified in the test inventory.' if skip_oauth_tests
+
+    let(:params) do
+      default_params = super()
+      default_params.delete(:user)
+      default_params.delete(:password)
+      default_params[:oauth_token] = master.run_shell("/opt/puppetlabs/puppet/bin/eyaml encrypt -s #{servicenow_config['oauth_token']} -o string").stdout
+      default_params
+    end
+
+    include_context 'setup cmdb'
+
+    it 'uses the new oauth token', skip: skip_oauth_tests do
+      result = trigger_puppet_run(master)
+      trusted_json = parse_json(result.stdout, 'trusted_json')
+      expect(trusted_json['external']['servicenow']['fqdn']).to eql(master.uri)
+    end
+  end
 end
