@@ -33,8 +33,25 @@ def parse_classification_fields(cmdb_record, classes_field, environment_field)
       classes = JSON.parse(classes)
       raise unless classes.is_a? Hash
 
-      classes.each do |_puppet_class, params|
-        raise unless params.is_a? Hash
+      classes.each do |puppet_class, params|
+        case params
+        when Hash
+          # puppet_classes was a String field type so we've
+          # already parsed the params hash
+          next
+        when String
+          # puppet_classes was a Name-Value pairs field type
+          # so we'll need to parse the params hash and
+          # handle the possibility of an empty value for params
+          params = '{}' if params.empty?
+          raise unless JSON.parse(params).is_a? Hash
+          # If we make it here, the params field was parsed and
+          # we save the hash back into the classes var
+          classes[puppet_class] = JSON.parse(params)
+        else
+          # puppet_classes is an invalid field type
+          raise
+        end
       end
     rescue
       raise "#{classes_field} must be a json serialization of type Hash[String, Hash[String, Any]]"
