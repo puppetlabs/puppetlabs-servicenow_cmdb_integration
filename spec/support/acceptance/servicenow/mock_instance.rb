@@ -3,6 +3,7 @@
 require 'json'
 require 'securerandom'
 require 'sinatra'
+require 'base64'
 
 # Our mock ServiceNow instance is a Sinatra server that mimics
 # the relevant ServiceNow API endpoints used by the tests
@@ -20,13 +21,22 @@ class MockServiceNowInstance < Sinatra::Base
       SSLEnable: true,
       SSLCertName: [['CN', 'Sinatra']]
 
-  # Handles authorization
-  use Rack::Auth::Basic do |user, password|
-    user == 'mock_user' && password == 'mock_password'
-  end
-
   before do
     content_type 'application/json'
+
+    auth_header = env['HTTP_AUTHORIZATION'] || ''
+    if auth_header.start_with?('Basic')
+      username_pass = Base64.decode64(auth_header.gsub('Basic ', ''))
+      unless username_pass == 'mock_user:mock_password'
+        halt 401, to_error_response("Authorization Failed. Username/Pass incorrect.\nExpected: mock_user:mock_password\nGot: #{username_pass}")
+      end
+    elsif auth_header.start_with?('Bearer')
+      unless auth_header == 'Bearer mock_token'
+        halt 401, to_error_response("Authorization Failed. OAuth Token incorrect\nExpected: mock_token\nGot: #{auth_header.gsub('Bearer ', '')}")
+      end
+    else
+      halt 401, to_error_response('No authorization received. Please use username: mock_user password: mock_password, or OAuthToken: mock_token.')
+    end
   end
 
   post '/api/now/table/:table_name' do |table_name|

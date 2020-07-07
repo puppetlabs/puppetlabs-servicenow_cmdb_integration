@@ -25,3 +25,4 @@
 .project
 .envrc
 /inventory.yaml
+/rspec_junit_results.xml
