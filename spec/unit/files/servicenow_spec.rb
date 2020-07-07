@@ -56,22 +56,16 @@ describe 'servicenow' do
             'param2' => 'value2',
           },
           'class::bar' => {},
-        }
+        }.to_json
       end
       let(:cmdb_api_response) do
         response = JSON.parse(super())
 
         cmdb_record = response['result'][0]
         cmdb_record['u_puppet_environment'] = environment
-
-        # Need to name as puppet_classes so that we can still access
-        # the 'classes' let variable
-        puppet_classes = classes
-        puppet_classes = puppet_classes.to_json unless puppet_classes.is_a?(String)
-        cmdb_record['u_puppet_classes'] = puppet_classes
+        cmdb_record['u_puppet_classes'] = classes
 
         response['result'][0] = cmdb_record
-
         response.to_json
       end
 
@@ -85,7 +79,7 @@ describe 'servicenow' do
       end
 
       it 'has a puppet_classes key' do
-        expect(node_data_hash['puppet_classes']).to eq(classes)
+        expect(node_data_hash['puppet_classes']).to eq(JSON.parse(classes))
       end
 
       it 'has a hiera_data key' do
@@ -124,6 +118,46 @@ describe 'servicenow' do
 
         it 'sets puppet_classes to an empty hash' do
           expect(node_data_hash['puppet_classes']).to eq({})
+        end
+      end
+
+      context 'classes is a Name-Value pair field type' do
+        let(:classes_hash) do
+          {
+            'class::foo' => {
+              'param1' => 'value1',
+              'param2' => 'value2',
+            },
+            'class::bar' => {},
+          }
+        end
+        # classes is the raw value of the 'u_puppet_classes' field
+        let(:classes) do
+          {
+            'class::foo' => {
+              'param1' => 'value1',
+              'param2' => 'value2',
+            }.to_json,
+            # This also tests that '' is parsed as {}
+            'class::bar' => '',
+          }.to_json
+        end
+
+        it 'still correctly parses the classes' do
+          expect(node_data_hash['puppet_classes']).to eq(classes_hash)
+        end
+
+        context 'with an invalid value' do
+          let(:classes) do
+            {
+              'class::foo' => {}.to_json,
+              'class::bar' => 'not_a_params_hash',
+            }.to_json
+          end
+
+          it 'throws an error' do
+            expect { node_data_hash }.to raise_error(RuntimeError, Regexp.new(Regexp.escape('Hash[String, Any]]')))
+          end
         end
       end
     end

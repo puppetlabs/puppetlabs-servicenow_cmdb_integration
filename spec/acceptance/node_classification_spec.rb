@@ -67,7 +67,7 @@ describe 'node classification' do
     master.apply_manifest(setup_manifest)
   end
 
-  shared_examples 'classification tests' do |classes_field = 'u_puppet_classes', environment_field = 'u_puppet_environment'|
+  shared_examples 'classification tests' do |classes_field: 'u_puppet_classes', environment_field: 'u_puppet_environment'|
     let(:classes) do
       {
         'no_param' => {},
@@ -121,12 +121,22 @@ describe 'node classification' do
     # long enough to accept all of our inputs
     let(:params) { super().merge('classes_field' => 'comments') }
 
-    include_examples 'classification tests', 'comments'
+    include_examples 'classification tests', classes_field: 'comments'
   end
 
   context 'user specifies a different environment field' do
     let(:params) { super().merge('environment_field' => 'comments') }
 
-    include_examples 'classification tests', 'u_puppet_classes', 'comments'
+    include_examples 'classification tests', environment_field: 'comments'
+  end
+
+  context 'classes field is a Name-Value pairs field type' do
+    let(:params) { super().merge('classes_field' => 'u_puppet_classes_nvp') }
+
+    # Note that the ServiceNow API accepts a JSON object (raw or encoded) as input when
+    # updating a Name-Value pairs field. The API takes this JSON object and stringifies its
+    # values (so {"foo": {}} is stored as {"foo": "{}"}. Thus, our existing setup is still
+    # valid so we can reuse the 'classification tests' example.
+    include_examples 'classification tests', classes_field: 'u_puppet_classes_nvp'
   end
 end

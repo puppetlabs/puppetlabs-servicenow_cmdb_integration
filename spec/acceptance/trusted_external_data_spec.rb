@@ -37,7 +37,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     master.apply_manifest(setup_manifest, catch_changes: true)
   end
 
-  shared_context 'setup cmdb' do |cmdb_table = 'cmdb_ci', certname_field = 'fqdn'|
+  shared_context 'setup cmdb' do |cmdb_table: 'cmdb_ci', certname_field: 'fqdn'|
     before(:each) do
       fields_template = JSON.parse(File.read('spec/support/acceptance/cmdb_record_template.json'))
       # Store the CMDB table in an arbitrary (String) field so that tests can assert on it
@@ -77,7 +77,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     # If for some reason it is changed to something else, then make sure to update the
     # mock ServiceNow instance's implementation with the new table since the mock's
     # available tables are (currently) hardcoded.
-    include_context 'setup cmdb', 'cmdb_ci_acc', 'fqdn'
+    include_context 'setup cmdb', cmdb_table: 'cmdb_ci_acc'
 
     it "contains the node's CMDB record in the user-specified CMDB table" do
       result = trigger_puppet_run(master)
@@ -94,7 +94,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     # Choose 'asset_tag' as the certname field since it is a String
     let(:params) { super().merge('certname_field' => 'asset_tag') }
 
-    include_context 'setup cmdb', 'cmdb_ci', 'asset_tag'
+    include_context 'setup cmdb', certname_field: 'asset_tag'
 
     it "queries the node's CMDB record using the user-specified certname field" do
       result = trigger_puppet_run(master)
