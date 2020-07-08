@@ -27,20 +27,19 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     set_sitepp_content('')
   end
 
-  # Tests may have test-specific parameters for the servicenow_cmdb_integration
-  # class so make sure to apply the class _before_ each test
-  before(:each) do
-    master.apply_manifest(setup_manifest)
-  end
-
   it 'has idempotent setup' do
-    master.apply_manifest(setup_manifest, catch_changes: true)
+    clear_trusted_external_data_setup
+    master.idempotent_apply(setup_manifest)
   end
 
-  shared_context 'setup cmdb' do |cmdb_table: 'cmdb_ci', certname_field: 'fqdn'|
+  shared_context 'trusted external data test setup' do |cmdb_table: 'cmdb_ci', certname_field: 'fqdn'|
     before(:each) do
+      # Set up the trusted external command
+      master.apply_manifest(setup_manifest, catch_failures: true)
+
+      # Set up the CMDB. Note that we store the CMDB table in an arbitrary (String) field so that tests
+      # can assert on it
       fields_template = JSON.parse(File.read('spec/support/acceptance/cmdb_record_template.json'))
-      # Store the CMDB table in an arbitrary (String) field so that tests can assert on it
       fields_template['attributes'] = cmdb_table
       CMDBHelpers.create_target_record(master, fields_template, table: cmdb_table, certname_field: certname_field)
     end
@@ -50,7 +49,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
   end
 
   context 'default behavior' do
-    include_context 'setup cmdb'
+    include_context 'trusted external data test setup'
 
     it "contains the node's CMDB record in the 'cmdb_ci' table obtained by querying the 'fqdn' field" do
       result = trigger_puppet_run(master)
@@ -77,7 +76,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     # If for some reason it is changed to something else, then make sure to update the
     # mock ServiceNow instance's implementation with the new table since the mock's
     # available tables are (currently) hardcoded.
-    include_context 'setup cmdb', cmdb_table: 'cmdb_ci_acc'
+    include_context 'trusted external data test setup', cmdb_table: 'cmdb_ci_acc'
 
     it "contains the node's CMDB record in the user-specified CMDB table" do
       result = trigger_puppet_run(master)
@@ -94,7 +93,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     # Choose 'asset_tag' as the certname field since it is a String
     let(:params) { super().merge('certname_field' => 'asset_tag') }
 
-    include_context 'setup cmdb', certname_field: 'asset_tag'
+    include_context 'trusted external data test setup', certname_field: 'asset_tag'
 
     it "queries the node's CMDB record using the user-specified certname field" do
       result = trigger_puppet_run(master)
@@ -111,7 +110,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
       default_params
     end
 
-    include_context 'setup cmdb'
+    include_context 'trusted external data test setup'
 
     it 'still works' do
       result = trigger_puppet_run(master)
@@ -140,12 +139,30 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
       default_params
     end
 
-    include_context 'setup cmdb'
+    include_context 'trusted external data test setup'
 
     it 'uses the new oauth token', skip: skip_oauth_tests do
       result = trigger_puppet_run(master)
       trusted_json = parse_json(result.stdout, 'trusted_json')
       expect(trusted_json['external']['servicenow']['fqdn']).to eql(master.uri)
+    end
+  end
+
+  context 'dry testing the servicenow.rb script fails in the trusted external data setup' do
+    let(:params) do
+      default_params = super()
+      default_params[:user] = "invalid_#{default_params[:user]}"
+      default_params
+    end
+
+    before(:each) do
+      clear_trusted_external_data_setup
+    end
+
+    it 'reports an error and does not set the trusted_external_command setting' do
+      master.apply_manifest(setup_manifest, expect_failures: true)
+      trusted_external_command_setting = master.run_shell('puppet config print trusted_external_command --section master').stdout.chomp
+      expect(trusted_external_command_setting).to be_empty
     end
   end
 end
