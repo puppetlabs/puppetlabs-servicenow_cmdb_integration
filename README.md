@@ -144,10 +144,11 @@ To setup the test infrastructure, use `bundle exec rake acceptance:setup`. This 
 * **Provision the master VM**
 * **Setup PE on the VM**
 * **Setup the mock ServiceNow instance.** This is just a Docker container on the master VM that mimics the relevant ServiceNow endpoints. Its code is contained in `spec/support/acceptance/servicenow`.
+* **Install the module on the master**
 
 Each setup step is its own task; `acceptance:setup`'s implementation consists of calling these tasks. Also, all setup tasks are idempotent. That means its safe to run them (and hence `acceptance:setup`) multiple times.
 
-**Note:** You can run the tests on a real ServiceNow instance. To do so, just invoke `bundle exec rake acceptance:setup_servicenow_instance[<fqdn>,<user>,<password>,<oauth_token>]`. This will update the `inventory.yaml` file with the actual ServiceNow instance credentials. The oauth tests will be skipped if no token is provided.
+**Note:** You can run the tests on a real ServiceNow instance. To do so, make sure that you've extended the `cmdb_ci` table with the `Puppet Classes` (field type `String`), `Puppet Environment` (field type `String`), and `Puppet Classes NVP` (field type `Name-Value pair`) fields (using the ServiceNow-generated column names for each field). Afterwards, invoke `bundle exec rake 'acceptance:setup_servicenow_instance[<fqdn>,<user>,<password>,<oauth_token>]'`. This will update the `inventory.yaml` file with the actual ServiceNow instance credentials. Note that the `<oauth_token>` is optional; if not provided, then the oauth token tests will be skipped.
 
 To run the tests after setup, you can do `bundle exec rspec spec/acceptance`. To teardown the infrastructure, do `bundle exec rake acceptance:tear_down`.
 
@@ -158,6 +159,8 @@ bundle exec rake acceptance:setup
 bundle exec rspec spec/acceptance
 bundle exec rake acceptance:tear_down
 ```
+
+**Note:** Remember to run `bundle exec rake acceptance:install_module` whenever you make updates to the module code. This ensures that the tests run against the latest version of the module.
 
 #### Debugging the acceptance tests
 Since the high-level setup is separate from the tests, you should be able to re-run a failed test multiple times via `bundle exec rspec spec/acceptance/path/to/test.rb`.

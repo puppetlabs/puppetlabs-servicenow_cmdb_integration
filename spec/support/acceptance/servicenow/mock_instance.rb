@@ -49,6 +49,24 @@ class MockServiceNowInstance < Sinatra::Base
       halt 400, to_error_response("fields must be a hash of <field> => <value>, got #{fields}")
     end
 
+    # Iterate over the fields and check if any of their values is a JSON object.
+    # If yes, assume this is a Name-Value pair field so munge it to how it's actually
+    # stored in ServiceNow (stringified JSON where each pair's value is a JSON string
+    # [if the value's a Hash/Array]). This simulates the actual API.
+    fields.each do |field, value|
+      next unless value.is_a?(Hash)
+
+      pairs = value
+      pairs.each do |key, val|
+        if val.is_a?(Hash) || val.is_a?(Array)
+          val = val.to_json
+        end
+        pairs[key] = val
+      end
+
+      fields[field] = pairs.to_json
+    end
+
     fields['sys_id'] = SecureRandom.uuid.delete('-')
     table(table_name)[fields['sys_id']] = fields
     to_response(fields)
