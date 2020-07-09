@@ -8,14 +8,19 @@ require 'hashdiff'
 require_relative '../../../files/servicenow.rb'
 
 describe 'servicenow' do
-  let(:cmdb_api_response) { File.read('./spec/support/files/valid_cmdb_api_response.json') }
+  let(:cmdb_api_response_status) { 200 }
+  let(:cmdb_api_response_body) { File.read('./spec/support/files/valid_cmdb_api_response.json') }
   let(:config) { YAML.load_file('./spec/support/files/default_config.yaml') }
   let(:node_data_hash) { JSON.parse(servicenow('blah'))['servicenow'] }
   let(:expected_response_json) { File.read('./spec/support/files/servicenow_rb_response.json') }
 
   before(:each) do
     allow(YAML).to receive(:load_file).with(%r{servicenow_cmdb\.yaml}).and_return(config)
-    allow(Net::HTTP).to receive(:start).with(config['instance'], 443, use_ssl: true, verify_mode: 0).and_return(cmdb_api_response)
+
+    response_obj = instance_double('Net::HTTP response obj')
+    allow(response_obj).to receive(:code).and_return(cmdb_api_response_status.to_s)
+    allow(response_obj).to receive(:body).and_return(cmdb_api_response_body)
+    allow(Net::HTTP).to receive(:start).with(config['instance'], 443, use_ssl: true, verify_mode: 0).and_return(response_obj)
   end
 
   context 'without at least one valid method of authentication' do
@@ -27,8 +32,17 @@ describe 'servicenow' do
     end
   end
 
+  context 'ServiceNow API returns an error response' do
+    let(:cmdb_api_response_status) { 400 }
+    let(:cmdb_api_response_body) { 'failed_because' }
+
+    it 'will fail' do
+      expect { node_data_hash }.to raise_error(RuntimeError, %r{/now/table.*400.*failed_because})
+    end
+  end
+
   context 'node does not exist' do
-    let(:cmdb_api_response) do
+    let(:cmdb_api_response_body) do
       '{"result": []}'
     end
 
@@ -39,7 +53,7 @@ describe 'servicenow' do
 
   context 'node exists' do
     it "returns the node's parsed CMDB record" do
-      expected_cmdb_record = JSON.parse(cmdb_api_response)['result'][0]
+      expected_cmdb_record = JSON.parse(cmdb_api_response_body)['result'][0]
       expect(node_data_hash).to eql(expected_cmdb_record)
     end
 
@@ -58,7 +72,7 @@ describe 'servicenow' do
           'class::bar' => {},
         }.to_json
       end
-      let(:cmdb_api_response) do
+      let(:cmdb_api_response_body) do
         response = JSON.parse(super())
 
         cmdb_record = response['result'][0]

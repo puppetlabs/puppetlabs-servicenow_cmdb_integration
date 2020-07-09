@@ -38,6 +38,11 @@ rescue => e
   raise "Failed to parse the #{desc} JSON: #{e}\nPuppet output:\n#{puppet_output}"
 end
 
+def clear_trusted_external_data_setup
+  master.run_shell('rm -rf /etc/puppetlabs/puppet/trusted-external-commands/')
+  master.run_shell('puppet config delete trusted_external_command --section master')
+end
+
 def declare(type, title, params = {})
   params = params.map do |name, value|
     value = "'#{value}'" if value.is_a?(String)

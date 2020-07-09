@@ -47,13 +47,13 @@ describe 'node classification' do
         override_environment: true,
       ),
     )
-    master.apply_manifest(setup_manifest)
+    master.apply_manifest(setup_manifest, catch_failures: true)
     master.run_shell("puppet task run servicenow_cmdb_integration::add_environment_rule --params '{\"group_names\": [\"#{TEST_ENVIRONMENT}\"]}' --nodes #{master.uri}")
   end
   after(:all) do
     # Teardown the test environment
     master.run_shell("rm -rf #{TEST_ENVIRONMENT_CODE_DIR}")
-    master.apply_manifest(declare('node_group', TEST_ENVIRONMENT, ensure: 'absent'))
+    master.apply_manifest(declare('node_group', TEST_ENVIRONMENT, ensure: 'absent'), catch_failures: true)
   end
 
   # Setup the trusted external data feature since classification depends on it.
@@ -64,7 +64,7 @@ describe 'node classification' do
       declare('Service', 'pe-puppetserver'),
       declare('class', 'servicenow_cmdb_integration', params),
     )
-    master.apply_manifest(setup_manifest)
+    master.apply_manifest(setup_manifest, catch_failures: true)
   end
 
   shared_examples 'classification tests' do |classes_field: 'u_puppet_classes', environment_field: 'u_puppet_environment'|

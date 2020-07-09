@@ -78,6 +78,8 @@ end
 
 # Abstract away the API calls.
 class ServiceNowRequest
+  attr_reader :uri
+
   def initialize(uri, http_verb, body, user, password, oauth_token)
     unless oauth_token || (user && password)
       raise ArgumentError, 'user/password or oauth_token must be specified'
@@ -107,12 +109,8 @@ class ServiceNowRequest
       else
         request.basic_auth(@user, @password)
       end
-      response = http.request(request)
-      # Parse and print response
-      response.body
+      http.request(request)
     end
-  rescue => e
-    raise e
   end
 end
 
@@ -171,8 +169,14 @@ def servicenow(certname)
   uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
 
   cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
+  response = cmdb_request.response
+  status = response.code.to_i
+  body = response.body
+  if status >= 400
+    raise "failed to retrieve the CMDB record from #{cmdb_request.uri} (status: #{status}): #{body}"
+  end
 
-  cmdb_record = JSON.parse(cmdb_request.response)['result'][0] || {}
+  cmdb_record = JSON.parse(body)['result'][0] || {}
   parse_classification_fields(cmdb_record, classes_field, environment_field)
 
   response = {

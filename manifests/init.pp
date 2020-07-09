@@ -91,6 +91,12 @@ class servicenow_cmdb_integration (
     },
   ])
 
+  exec { 'dry test servicenow.rb script':
+    command     => "${external_commands_base}/servicenow.rb __dry_test__",
+    subscribe   => $resource_dependencies,
+    refreshonly => true,
+  }
+
   ini_setting { 'puppetserver puppetconf trusted external command':
     ensure  => present,
     path    => '/etc/puppetlabs/puppet/puppet.conf',
@@ -98,6 +104,6 @@ class servicenow_cmdb_integration (
     value   => "${external_commands_base}/servicenow.rb",
     section => 'master',
     notify  => Service['pe-puppetserver'],
-    require => $resource_dependencies,
+    require => Exec['dry test servicenow.rb script'],
   }
 }
