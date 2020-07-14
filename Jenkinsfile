@@ -1,4 +1,4 @@
-@Library('puppet_jenkins_shared_libraries@add-ruby-helper-vars') _
+@Library('puppet_jenkins_shared_libraries') _
 
 pipeline{
     agent {
