@@ -62,6 +62,8 @@ class { 'servicenow_cmdb_integration':
 
 Please note that you may specify a user/password or an oauth token, but not both.
 
+> If you're using a hiera-eyaml encrypted password, then make sure that `eyaml decrypt -s <encrypted_password>` returns the same password on all nodes in the `PE Master` node group.
+
 > For customers using PE 2019.7+, we recommend adding this class to the `PE Master` node group. If HA is installed, then it should also be added to the `PE HA Replica` group.
 
 This class installs the `servicenow.rb` script. The script fetches the node's CMDB record from the `cmdb_ci` table and stores it in the `trusted.external.servicenow` variable. This variable is a hash of `<field> => <value>` where `<field>` is a field in the `cmdb_ci` table and `<value>` is the field's value. If the field's a reference field then `<value>` is that field's display value.
