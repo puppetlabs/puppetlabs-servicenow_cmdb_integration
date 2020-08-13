@@ -11,7 +11,7 @@ fixtures:
       ref: "0.5.1"
     inifile:
       repo: "puppetlabs/inifile"
-      ref: "4.2.0"
+      ref: "1.0.0"
   repositories:
     "stdlib":
       "repo": "git://github.com/puppetlabs/puppetlabs-stdlib.git"
