@@ -40,6 +40,12 @@ def changelog_future_release
   returnVal
 end
 
+def servicenow_params(args)
+  args.names.map do |name|
+    args[name] || ENV[name.to_s.upcase]
+  end
+end
+
 PuppetLint.configuration.send('disable_relative')
 
 if Bundler.rubygems.find_name('github_changelog_generator').any?
@@ -121,8 +127,8 @@ namespace :acceptance do
   end
 
   desc 'Sets up the ServiceNow instance'
-  task :setup_servicenow_instance, [:instance, :user, :password, :token] do |_, args|
-    instance, user, password, token = args[:instance], args[:user], args[:password], args[:token]
+  task :setup_servicenow_instance, [:sn_instance, :sn_user, :sn_password, :sn_token] do |_, args|
+    instance, user, password, token = servicenow_params(args)
     if instance.nil?
       # Start the mock ServiceNow instance. If an instance has already been started,
       # then the script will remove the old instance before replacing it with the new
