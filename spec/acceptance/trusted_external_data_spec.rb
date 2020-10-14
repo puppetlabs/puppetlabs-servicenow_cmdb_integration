@@ -10,8 +10,19 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
       password: servicenow_config['password'],
     }
   end
+
+  let(:invalid_user_params) do
+    default_params = params
+    default_params[:user] = "invalid_#{default_params[:user]}"
+    default_params
+  end
+
   let(:setup_manifest) do
     to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_cmdb_integration', params))
+  end
+
+  let(:invalid_user_manifest) do
+    to_manifest(declare('Service', 'pe-puppetserver'), declare('class', 'servicenow_cmdb_integration', invalid_user_params))
   end
 
   before(:all) do
@@ -34,6 +45,7 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
 
   shared_context 'trusted external data test setup' do |cmdb_table: 'cmdb_ci', certname_field: 'fqdn'|
     before(:each) do
+      CMDBHelpers.delete_target_record(master, table: cmdb_table, certname_field: certname_field)
       # Set up the trusted external command
       master.apply_manifest(setup_manifest, catch_failures: true)
 
@@ -42,9 +54,6 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
       fields_template = JSON.parse(File.read('spec/support/acceptance/cmdb_record_template.json'))
       fields_template['attributes'] = cmdb_table
       CMDBHelpers.create_target_record(master, fields_template, table: cmdb_table, certname_field: certname_field)
-    end
-    after(:each) do
-      CMDBHelpers.delete_target_record(master, table: cmdb_table, certname_field: certname_field)
     end
   end
 
@@ -149,20 +158,29 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
   end
 
   context 'dry testing the servicenow.rb script fails in the trusted external data setup' do
-    let(:params) do
-      default_params = super()
-      default_params[:user] = "invalid_#{default_params[:user]}"
-      default_params
-    end
-
     before(:each) do
       clear_trusted_external_data_setup
     end
 
     it 'reports an error and does not set the trusted_external_command setting' do
-      master.apply_manifest(setup_manifest, expect_failures: true)
+      master.apply_manifest(invalid_user_manifest, expect_failures: true)
       trusted_external_command_setting = master.run_shell('puppet config print trusted_external_command --section master').stdout.chomp
       expect(trusted_external_command_setting).to be_empty
+    end
+  end
+
+  context 'dry testing changes to a valid configuration' do
+    before(:each) do
+      clear_trusted_external_data_setup
+    end
+
+    include_context 'trusted external data test setup'
+
+    it 'reports an error and does not set the trusted_external_command setting' do
+      master.apply_manifest(invalid_user_manifest, expect_failures: true) do |response|
+        expect(response['stdout']).to match(%r{File\[/etc/puppetlabs/puppet/servicenow_cmdb\.yaml\] has failures: true})
+        expect(response['stderr']).to match(%r{validate_settings\.rb.+returned 1.+Authorization Failed})
+      end
     end
   end
 end

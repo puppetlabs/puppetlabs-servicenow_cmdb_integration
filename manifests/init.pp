@@ -55,6 +55,7 @@ class servicenow_cmdb_integration (
   # path to the yaml file is hard coded in the servicenow.rb script.
   $puppet_base = '/etc/puppetlabs/puppet'
   $external_commands_base = "${puppet_base}/trusted-external-commands"
+  $validate_settings_path = '/tmp/validate_settings.rb'
 
   $resource_dependencies = flatten([
 
@@ -73,12 +74,23 @@ class servicenow_cmdb_integration (
       require => [File[$external_commands_base]],
     },
 
-    file { "${puppet_base}/servicenow_cmdb.yaml":
+    file { $validate_settings_path:
       ensure  => file,
       owner   => 'pe-puppet',
       group   => 'pe-puppet',
-      mode    => '0640',
-      content => epp('servicenow_cmdb_integration/servicenow_cmdb.yaml.epp', {
+      mode    => '0755',
+      content => epp( 'servicenow_cmdb_integration/validate_settings.rb.epp', {
+        require_path => "${external_commands_base}/servicenow.rb"
+      }),
+    },
+
+    file { "${puppet_base}/servicenow_cmdb.yaml":
+      ensure       => file,
+      owner        => 'pe-puppet',
+      group        => 'pe-puppet',
+      mode         => '0640',
+      validate_cmd => "${validate_settings_path} %",
+      content      => epp('servicenow_cmdb_integration/servicenow_cmdb.yaml.epp', {
         instance          => $instance,
         user              => $user,
         password          => $password,
@@ -91,12 +103,6 @@ class servicenow_cmdb_integration (
     },
   ])
 
-  exec { 'dry test servicenow.rb script':
-    command     => "${external_commands_base}/servicenow.rb __dry_test__",
-    subscribe   => $resource_dependencies,
-    refreshonly => true,
-  }
-
   ini_setting { 'puppetserver puppetconf trusted external command':
     ensure  => present,
     path    => '/etc/puppetlabs/puppet/puppet.conf',
@@ -104,6 +110,6 @@ class servicenow_cmdb_integration (
     value   => "${external_commands_base}/servicenow.rb",
     section => 'master',
     notify  => Service['pe-puppetserver'],
-    require => Exec['dry test servicenow.rb script'],
+    require => $resource_dependencies,
   }
 }
