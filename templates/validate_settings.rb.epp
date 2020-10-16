@@ -1,0 +1,9 @@
+<%- | String $require_path
+| -%>
+#!/opt/puppetlabs/puppet/bin/ruby
+
+require_relative '<%= $require_path %>'
+
+if $PROGRAM_NAME == __FILE__
+  servicenow('__test__', ARGV[0])
+end

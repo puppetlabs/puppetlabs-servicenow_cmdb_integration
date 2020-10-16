@@ -54,6 +54,7 @@ describe 'node classification' do
     # Teardown the test environment
     master.run_shell("rm -rf #{TEST_ENVIRONMENT_CODE_DIR}")
     master.apply_manifest(declare('node_group', TEST_ENVIRONMENT, ensure: 'absent'), catch_failures: true)
+    CMDBHelpers.delete_target_record(master)
   end
 
   # Setup the trusted external data feature since classification depends on it.
@@ -82,13 +83,11 @@ describe 'node classification' do
     end
 
     before(:each) do
+      CMDBHelpers.delete_target_record(master)
       fields_template = JSON.parse(File.read('spec/support/acceptance/cmdb_record_template.json'))
       fields_template[classes_field] = classes.to_json
       fields_template[environment_field] = TEST_ENVIRONMENT
       CMDBHelpers.create_target_record(master, fields_template)
-    end
-    after(:each) do
-      CMDBHelpers.delete_target_record(master)
     end
 
     it "lets users classify nodes in ServiceNow's CMDB" do
