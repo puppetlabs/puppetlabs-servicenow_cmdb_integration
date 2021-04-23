@@ -24,12 +24,14 @@ group :development do
   gem "json", '= 2.0.4',                                         require: false if Gem::Requirement.create('~> 2.4.2').satisfied_by?(Gem::Version.new(RUBY_VERSION.dup))
   gem "json", '= 2.1.0',                                         require: false if Gem::Requirement.create(['>= 2.5.0', '< 2.7.0']).satisfied_by?(Gem::Version.new(RUBY_VERSION.dup))
   gem "rb-readline", '= 0.5.5',                                  require: false, platforms: [:mswin, :mingw, :x64_mingw]
-  gem "puppet_litmus", '~> 0.18',                                require: false, platforms: [:ruby]
+  # Temporarily setting puppet_litmus version to 0.26.0 or older because new litmus version changes where the inventory file gets
+  # created/the name changes to litmus_inventory.yml which is not compatible with the current tests.
+  gem "puppet_litmus", '~> 0.18', '<= 0.26.0',                    require: false, platforms: [:ruby]
   gem "puppet-module-posix-default-r#{minor_version}", '~> 0.4', require: false, platforms: [:ruby]
   gem "puppet-module-posix-dev-r#{minor_version}", '~> 0.4',     require: false, platforms: [:ruby]
   gem "puppet-module-win-default-r#{minor_version}", '~> 0.4',   require: false, platforms: [:mswin, :mingw, :x64_mingw]
   gem "puppet-module-win-dev-r#{minor_version}", '~> 0.4',       require: false, platforms: [:mswin, :mingw, :x64_mingw]
-  gem "rspec-puppet", *location_for('https://github.com/ekinanp/rspec-puppet.git#master')
+  gem "rspec-puppet"
   gem "hashdiff",                                                require: false
   gem "rspec_junit_formatter",                                   require: false
 end

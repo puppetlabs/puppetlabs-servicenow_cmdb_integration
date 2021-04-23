@@ -1,4 +1,5 @@
 require 'puppet_litmus'
+PuppetLitmus.configure!
 # rubocop:disable Style/BracesAroundHashParameters
 
 # The Target class and TargetHelpers module are a useful ways
@@ -94,7 +95,7 @@ module CMDBHelpers
     end
     task_result = servicenow_instance.run_bolt_task(
       'servicenow_tasks::create_record',
-      { 'table' => table, 'fields' => fields.merge(certname_field => target.uri) }
+      { 'table' => table, 'fields' => fields.merge(certname_field => target.uri).to_json }
     )
     task_result.result['result']
   end
@@ -103,7 +104,7 @@ module CMDBHelpers
   def get_target_record(target, table: 'cmdb_ci', certname_field: 'fqdn')
     task_result = servicenow_instance.run_bolt_task(
       'servicenow_tasks::get_records',
-      { 'table' => table, 'url_params' => { certname_field => target.uri, 'sysparm_display_value' => true } },
+      { 'table' => table, 'url_params' => { certname_field => target.uri, 'sysparm_display_value' => true }.to_json },
     )
     satisfying_records = task_result.result['result']
     return nil if satisfying_records.empty?
@@ -122,7 +123,7 @@ module CMDBHelpers
     return if record.nil?
     servicenow_instance.run_bolt_task(
       'servicenow_tasks::delete_record',
-      { 'table' => table, 'sys_id' => record['sys_id'] },
+      { 'table' => table, 'sys_id' => record['sys_id'].to_s },
     )
   end
   module_function :delete_target_record
