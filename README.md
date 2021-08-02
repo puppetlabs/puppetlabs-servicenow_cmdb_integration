@@ -14,7 +14,7 @@ This module integrates ServiceNow's CMDB with Puppet Enterprise. Specifically, i
 
 * Access a node's CMDB record as trusted external data via the `trusted.external.servicenow` hash.
 
-* Classify nodes in the CMDB by using it to store the node's Puppet environment and classes. Puppet will automatically fetch and apply this classification in the node's subsequent runs.
+* Classify nodes in the CMDB by using it to store the node's Puppet [environment](https://puppet.com/docs/puppet/7/environments_about.html) and [classes](https://puppet.com/docs/puppet/6/lang_classes.html). Puppet will automatically fetch and apply this classification in the node's subsequent runs.
 
 ## Setup
 
@@ -44,47 +44,6 @@ Pre-reqs:
 
 
 **Note** The trusted external data feature does not depend on the classification feature, so you can enable it on its own. However, if you’re also interested in classifying nodes in the CMDB, you must enable both features. If you're interested in both the ServiceNow CMDB external data and node classification features of this module, then you can just read the [classification](#ServiceNow-node-classification) section since that depends on the CMDB external data feature.
-
-#### ServiceNow CMDB as trusted external data
-
-1. Install the `puppetlabs-servicenow_cmdb_integration` module on your Puppet master.
-
-2.  Add the `servicenow_cmdb_integration` class to the `PE Master` node group.
-In the PE console, navigate to `Classification` then expand the `PE Infrastructure` group
-Click `PE Master` then `Configuration`
-Add the `servicenow_cmdb_integration` class
-Enable these parameters:
-
-```
-class { 'servicenow_cmdb_integration':
-  instance    => '<fqdn_of_snow_instance>',
-  user        => '<user>',
-  password    => '<password>',
-}
-```
-
-Or if you'd prefer to use an OAuth token:
-
-```
-class { 'servicenow_cmdb_integration':
-  instance    => '<fqdn_of_snow_instance>',
-  oauth_token => '<snow_oauth_token>',
-}
-```
-
-> If you’re using a hiera-eyaml encrypted password, then make sure that `eyaml decrypt -s <encrypted_password>` returns the same password on all nodes in the `PE Master` node group.
-
-> You can also pass-in a plain-text or hiera-eyaml encrypted oauth token via the `oauth_token` parameter instead of a username/password. Please note that you may specify a user/password or an oauth token, but not both. Similar to a hiera-eyaml encrypted password, If you’re passing-in a hiera-eyaml encrypted oauth token, then make sure that `eyaml decrypt -s <encrypted_oauth_token>` returns the same oauth token on all nodes in the `PE Master` node group.
-
-Commit the changes, then run Puppet on the node group. This will cause a restart of the `pe-puppetserver` service.
-
-The `servicenow_cmdb_integration` class installs the `servicenow.rb` script and points Puppet’s `trusted_external_command` setting to that script. This script fetches the node's CMDB record from the `cmdb_ci` table and stores it in the `trusted.external.servicenow` variable.
-
-You can set the `table` parameter to point to a different CMDB table (like e.g. `cmdb_ci_server`). However, keep in mind that the script will only fetch data for nodes that are in the specified table _or_ a child of that table (such as nodes in the `cmdb_ci_server` table or a child table like `cmdb_ci_server_hardware`). It will return an empty hash for all other nodes.
-
-**Note:** Puppet invokes the `servicenow.rb` script via the calling-convention `servicenow.rb <certname>`. The script fetches the node's CMDB record by querying the record whose `fqdn` field matches `<certname>`. If you're storing node certnames in a separate CMDB field, then you can set the `certname_field` parameter to that CMDB field's _column name_.
-
-**Note to readers who are enabling classification:** If you're already storing the node's environment and classes in their own CMDB fields, then make sure to specify those fields' _column names_ in the `environment_field` and `classes_field` parameters, respectively. Otherwise, these default to `u_puppet_environment` and `u_puppet_classes`, respectively.
 
 #### ServiceNow node classification
 
@@ -151,7 +110,7 @@ Or something like `classes = JSON.parse(raw_value)` for the `String (Full UTF-8)
 	...
 	include servicenow_cmdb_integration::classification
 	```
-	
+
 	> The `classification` class includes all the classes specified in `trusted.external.servicenow.puppet_classes`. If that variable's not defined for the given node, then the class noops.
 
 Once you've created the commit, **deploy it to all of your relevant enviroments**. Otherwise, classification will not work.
@@ -229,7 +188,6 @@ If you see an empty hash for trusted.external.servicenow, then the CMDB table th
 **Note to readers who are enabling classification:** If classification’s been properly set up, then you should also see values for the `trusted.external.servicenow` hash’s `puppet_environment` and `puppet_classes` keys, respectively.
 
 You should now be able to reference the node’s CMDB record when writing your Puppet manifests. For example, the line `getvar(‘trusted.external.servicenow.asset_tag’)` (or `$trusted[‘external’][‘servicenow’][‘asset_tag’]`) returns the node’s asset tag.
-
 
 ## Development
 
