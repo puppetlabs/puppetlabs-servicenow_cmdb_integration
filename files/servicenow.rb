@@ -80,7 +80,7 @@ end
 class ServiceNowRequest
   attr_reader :uri
 
-  def initialize(uri, http_verb, body, user, password, oauth_token)
+  def initialize(uri, http_verb, body, user, password, oauth_token, proxy)
     unless oauth_token || (user && password)
       raise ArgumentError, 'user/password or oauth_token must be specified'
     end
@@ -90,9 +90,14 @@ class ServiceNowRequest
     @user = user
     @password = password
     @oauth_token = oauth_token
+    @proxy = proxy
   end
 
   def response
+    if @proxy
+      ENV['https_proxy'] = "#{@proxy}"
+      ENV['http_proxy'] = "#{@proxy}"
+    end
     Net::HTTP.start(@uri.host,
                     @uri.port,
                     use_ssl: @uri.scheme == 'https',
@@ -122,6 +127,7 @@ def servicenow(certname, config_file = nil)
   username          = servicenow_config['user']
   password          = servicenow_config['password']
   oauth_token       = servicenow_config['oauth_token']
+  proxy             = servicenow_config['proxy']
   table             = servicenow_config['table']
   certname_field    = servicenow_config['certname_field']
   classes_field     = servicenow_config['classes_field']
@@ -169,7 +175,7 @@ def servicenow(certname, config_file = nil)
 
   uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
 
-  cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
+  cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token, proxy)
   response = cmdb_request.response
   status = response.code.to_i
   body = response.body

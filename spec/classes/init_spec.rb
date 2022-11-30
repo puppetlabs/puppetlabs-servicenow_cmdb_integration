@@ -22,6 +22,19 @@ describe 'servicenow_cmdb_integration' do
     it { is_expected.to compile.with_all_deps }
   end
 
+  context 'with a user, password and proxy' do
+    let(:params) do
+      {
+        'instance' => 'foo_instance',
+        'user' => 'foo_user',
+        'password' => 'foo_password',
+        'proxy' => 'http://127.0.0.1:3128',
+      }
+    end
+
+    it { is_expected.to compile.with_all_deps }
+  end
+
   context 'with an oauth_token' do
     let(:params) do
       {

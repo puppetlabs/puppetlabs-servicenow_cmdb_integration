@@ -2,6 +2,7 @@
       Optional[String] $user = undef,
       Optional[String] $password = undef,
       Optional[String] $oauth_token = undef,
+      Optional[String] $proxy = undef,
       String $table,
       String $certname_field,
       String $classes_field,
@@ -13,6 +14,7 @@ instance: <%= $instance %>
 user: <%= $user %>
 password: <%= $password %>
 oauth_token: <%= $oauth_token %>
+proxy: <%= $proxy %>
 table: <%= $table %>
 certname_field: <%= $certname_field %>
 classes_field: <%= $classes_field %>
