@@ -126,6 +126,7 @@ def servicenow(certname, config_file = nil)
   certname_field    = servicenow_config['certname_field']
   classes_field     = servicenow_config['classes_field']
   environment_field = servicenow_config['environment_field']
+  factnameinplaceofcertname = servicenow_config['factnameinplaceofcertname']
 
   # Since we also support hiera-eyaml encrypted passwords, we'll want to decrypt
   # the password before passing it into the request. In order to do that, we first
@@ -166,18 +167,40 @@ def servicenow(certname, config_file = nil)
       oauth_token = oauth_token_tokens.map(&:to_plain_text).join
     end
   end
-
-  uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
-
-  cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
-  response = cmdb_request.response
-  status = response.code.to_i
-  body = response.body
-  if status >= 400
-    raise "failed to retrieve the CMDB record from #{cmdb_request.uri} (status: #{status}): #{body}"
+  
+  if factnameinplaceofcertname  
+    Puppet.initialize_settings if Puppet.settings[:vardir].nil? || Puppet.settings[:vardir].to_s.empty?
+    valuetolinkCMBD=Facter.value(factnameinplaceofcertname)
+  else
+    valuetolinkCMBD=certname
   end
+  
+  uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{valuetolinkCMBD}&sysparm_display_value=true"
 
-  cmdb_record = JSON.parse(body)['result'][0] || {}
+  cmdb_request = nil
+  cmdb_record = nil
+  
+  if oauth_token == 'simulationhost'
+    cmdb_record = {}
+    cmdb_record[classes_field] = servicenow_config
+    cmdb_record[classes_field]['uri'] = uri
+    data= JSON.parse(JSON.generate(cmdb_record[classes_field]))
+      
+    cmdb_record[classes_field]={}
+    cmdb_record[classes_field]['simulationhost'] = { "data" => data  }
+      
+    cmdb_record[classes_field] = JSON.generate(cmdb_record[classes_field])  
+  else
+    cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
+    response = cmdb_request.response
+    status = response.code.to_i
+    body = response.body
+    if status >= 400
+      raise "failed to retrieve the CMDB record from #{cmdb_request.uri} (status: #{status}): #{body}"
+    end
+  
+    cmdb_record = JSON.parse(body)['result'][0] || {}
+  end
   parse_classification_fields(cmdb_record, classes_field, environment_field)
 
   response = {

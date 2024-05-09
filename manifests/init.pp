@@ -26,13 +26,14 @@
 #   to 'u_puppet_environment'.
 class servicenow_cmdb_integration (
   String $instance,
-  Optional[String] $user        = undef,
-  Optional[String] $password    = undef,
-  Optional[String] $oauth_token = undef,
-  String $table                 = 'cmdb_ci',
-  String $certname_field        = 'fqdn',
-  String $classes_field         = 'u_puppet_classes',
-  String $environment_field     = 'u_puppet_environment',
+  Optional[String] $user                     = undef,
+  Optional[String] $password                 = undef,
+  Optional[String] $oauth_token              = undef,
+  String $table                              = 'cmdb_ci',
+  String $certname_field                     = 'fqdn',
+  String $classes_field                      = 'u_puppet_classes',
+  String $environment_field                  = 'u_puppet_environment',
+  Optional[String] $factnameinplaceofcertname = undef,
 ) {
 
   if (($user or $password) and $oauth_token) {
@@ -91,14 +92,15 @@ class servicenow_cmdb_integration (
       mode         => '0640',
       validate_cmd => "${validate_settings_path} %",
       content      => epp('servicenow_cmdb_integration/servicenow_cmdb.yaml.epp', {
-        instance          => $instance,
-        user              => $user,
-        password          => $password,
-        oauth_token       => $oauth_token,
-        table             => $table,
-        certname_field    => $certname_field,
-        classes_field     => $classes_field,
-        environment_field => $environment_field,
+        instance                  => $instance,
+        user                      => $user,
+        password                  => $password,
+        oauth_token               => $oauth_token,
+        table                     => $table,
+        certname_field            => $certname_field,
+        classes_field             => $classes_field,
+        environment_field         => $environment_field,
+        factnameinplaceofcertname => $factnameinplaceofcertname,
       }),
     },
   ])
