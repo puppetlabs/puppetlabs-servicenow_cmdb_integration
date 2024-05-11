@@ -8,6 +8,8 @@ require 'net/http'
 require 'yaml'
 require 'json'
 
+require 'puppet'
+
 # hiera-eyaml requires. Note that newer versions of puppet-agent
 # ship with the hiera-eyaml gem so these should work.
 require 'hiera/backend/eyaml/options'
@@ -172,9 +174,9 @@ def servicenow(certname, config_file = nil)
     Puppet.initialize_settings if Puppet.settings[:vardir].nil? || Puppet.settings[:vardir].to_s.empty?
     valuetolinkCMBD=Facter.value(factnameinplaceofcertname)
     data=%x(
-      certname=#{certname}; q="inventory[facts.#{factnameinplaceofcertname}]{ certname = \"$certname\" }" ; sn=`/opt/puppetlabs/bin/puppet config print server` ; puppet query "$q"  --urls https://${sn}:8081  --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem  --cert /etc/puppetlabs/puppet/ssl/certs/${sn}.pem  --key /etc/puppetlabs/puppet/ssl/private_keys/${sn}.pem
+      certname=#{certname}; q=\"inventory[facts.#{factnameinplaceofcertname}]{ certname = \\\"$certname\\\" }\" ; sn=`/opt/puppetlabs/bin/puppet config print server` ; puppet query "$q"  --urls https://${sn}:8081  --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem  --cert /etc/puppetlabs/puppet/ssl/certs/${sn}.pem  --key /etc/puppetlabs/puppet/ssl/private_keys/${sn}.pem
     )
-    valuetolinkCMBD=JSON.parse(data)[0][factnameinplaceofcertname]
+    valuetolinkCMBD=JSON.parse(data)[0].values[0]
   else
     valuetolinkCMBD=certname
   end
