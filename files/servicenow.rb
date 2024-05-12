@@ -169,36 +169,37 @@ def servicenow(certname, config_file = nil)
       oauth_token = oauth_token_tokens.map(&:to_plain_text).join
     end
   end
-  
-  if factnameinplaceofcertname  
+
+  if factnameinplaceofcertname
     Puppet.initialize_settings if Puppet.settings[:vardir].nil? || Puppet.settings[:vardir].to_s.empty?
-    valuetolinkCMBD=Facter.value(factnameinplaceofcertname)
-    
-    cmdata= <<-CMDATA
+    valuetolinkCMBD = Facter.value(factnameinplaceofcertname)
+
+    cmdata = <<-CMDATA
       certname=#{certname}; q=\"inventory[facts.#{factnameinplaceofcertname}]{ certname = \\\"$certname\\\" }\" ; sn=`/opt/puppetlabs/bin/puppet config print server` ; puppet query "$q"  --urls https://${sn}:8081  --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem  --cert /etc/puppetlabs/puppet/ssl/certs/${sn}.pem  --key /etc/puppetlabs/puppet/ssl/private_keys/${sn}.pem
 CMDATA
-    data=%x(#{cmdata})
-    
-    valuetolinkCMBD=JSON.parse(data)[0].values[0]
+    data = `#{cmdata}`
+
+    valuetolinkCMBD = JSON.parse(data)[0].values[0]
   else
-    valuetolinkCMBD=certname
+    valuetolinkCMBD = certname
   end
-  
+
   uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{valuetolinkCMBD}&sysparm_display_value=true"
 
   cmdb_request = nil
   cmdb_record = nil
-  
+
   if oauth_token == 'simulationhost'
     cmdb_record = {}
+    servicenow_config['password'] = '==PASSWORD==REDACTED==' unless servicenow_config['password'].nil? || servicenow_config['password'].empty?
     cmdb_record[classes_field] = servicenow_config
     cmdb_record[classes_field]['uri'] = uri
-    data= JSON.parse(JSON.generate(cmdb_record[classes_field]))
-      
-    cmdb_record[classes_field]={}
-    cmdb_record[classes_field]['simulationhost'] = { "data" => data  }
-      
-    cmdb_record[classes_field] = JSON.generate(cmdb_record[classes_field])  
+    data = JSON.parse(JSON.generate(cmdb_record[classes_field]))
+
+    cmdb_record[classes_field] = {}
+    cmdb_record[classes_field]['simulationhost'] = { 'data' => data }
+
+    cmdb_record[classes_field] = JSON.generate(cmdb_record[classes_field])
   else
     cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
     response = cmdb_request.response
@@ -207,7 +208,7 @@ CMDATA
     if status >= 400
       raise "failed to retrieve the CMDB record from #{cmdb_request.uri} (status: #{status}): #{body}"
     end
-  
+
     cmdb_record = JSON.parse(body)['result'][0] || {}
   end
   parse_classification_fields(cmdb_record, classes_field, environment_field)
