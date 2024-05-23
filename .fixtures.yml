@@ -14,12 +14,12 @@ fixtures:
       ref: "1.0.0"
   repositories:
     "stdlib":
-      "repo": "git@github.com:puppetlabs/puppetlabs-stdlib.git"
+      "repo": "https://github.com/puppetlabs/puppetlabs-stdlib.git"
     "translate":
-      "repo": "git@github.com:puppetlabs-toy-chest/puppetlabs-translate.git"
-    facts: 'git@github.com:puppetlabs/puppetlabs-facts.git'
-    puppet_agent: 'git@github.com:puppetlabs/puppetlabs-puppet_agent.git'
+      "repo": "https://github.com/puppetlabs/puppetlabs-translate.git"
+    facts: 'https://github.com/puppetlabs/puppetlabs-facts.git'
+    puppet_agent: 'https://github.com/puppetlabs/puppetlabs-puppet_agent.git'
     provision:
-      repo: "git@github.com:puppetlabs/provision.git"
+      repo: "https://github.com/puppetlabs/provision.git"
       ref: "1ddac67b8a6f829c545103185c05291a47e0776e"
-    servicenow_tasks: 'git@github.com:puppetlabs/servicenow_tasks.git'
+    servicenow_tasks: 'https://github.com/puppetlabs/servicenow_tasks.git'
