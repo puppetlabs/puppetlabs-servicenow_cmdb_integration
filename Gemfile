@@ -34,6 +34,9 @@ group :development do
   gem "rspec_junit_formatter",                                   require: false
   gem "hashdiff",                                                require: false
   gem "pdk",                                                     require: false
+  gem "pry-byebug",                                              require: false
+  gem "rdbg",                                                    require: false
+  gem "rdebug",                                                  require: false
 end
 
 puppet_version = ENV['PUPPET_GEM_VERSION']

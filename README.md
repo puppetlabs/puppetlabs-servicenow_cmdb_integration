@@ -158,6 +158,21 @@ class { 'servicenow_cmdb_integration':
 
 > If you’re using a hiera-eyaml encrypted password, then make sure that `eyaml decrypt -s <encrypted_password>` returns the same password on all nodes in the `PE Master` node group.
 
+> By default, the module will use certname as the key to match up the data on on the ServiceNow's side. There is also an option to use alternative fact. This is achieved by providing the name of the desired alternative as `factnameinplaceofcertname` parameter. 
+
+E.g.
+
+```
+class { 'servicenow_cmdb_integration':
+  instance    							 => '<fqdn_of_snow_instance>',
+  user       							 => '<user>',
+  password    							 => '<password>',
+  factnameinplaceofcertname => '<fact_name_to_use_to_match_up_with_snow>',
+}
+```
+
+
+
 > You can also pass-in a plain-text or hiera-eyaml encrypted oauth token via the `oauth_token` parameter instead of a username/password. Please note that you may specify a user/password or an oauth token, but not both. Similar to a hiera-eyaml encrypted password, If you’re passing-in a hiera-eyaml encrypted oauth token, then make sure that `eyaml decrypt -s <encrypted_oauth_token>` returns the same oauth token on all nodes in the `PE Master` node group.
 
 Commit the changes, then run Puppet on the node group. This will cause a restart of the `pe-puppetserver` service.
@@ -194,7 +209,7 @@ You should now be able to reference the node’s CMDB record when writing your P
 ### Unit tests
 To run the unit tests:
 
-```
+```bash
 bundle install
 bundle exec rake spec
 ```
@@ -217,7 +232,7 @@ To run the tests after setup, you can do `bundle exec rspec spec/acceptance`. To
 
 Below is an example acceptance test workflow:
 
-```
+```bash
 bundle exec rake acceptance:setup
 bundle exec rspec spec/acceptance
 bundle exec rake acceptance:tear_down
