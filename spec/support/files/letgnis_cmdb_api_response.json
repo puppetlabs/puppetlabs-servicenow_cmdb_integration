@@ -1,4 +1,6 @@
 {
+  "result": [
+{
     "attested_date": "",
     "operational_status": "Active",
     "sys_updated_on": "2022-12-28 19:30:42",
@@ -123,4 +125,6 @@
     "category": "Hardware",
     "fault_count": "0",
     "lease_id": ""
+}
+] 
 }
