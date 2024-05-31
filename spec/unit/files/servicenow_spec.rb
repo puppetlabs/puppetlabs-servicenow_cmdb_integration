@@ -10,7 +10,7 @@ require_relative '../../../files/servicenow.rb'
 
 describe 'servicenow' do
   let(:cmdb_api_response_status) { 200 }
-  let(:cmdb_api_response_body) { File.read('./spec/support/files/valid_cmdb_api_response.json') }
+  let(:cmdb_api_response_body) { reponsefile = reponsefilename if defined?(reponsefilename)  ; reponsefile ||= './spec/support/files/valid_cmdb_api_response.json' ; File.read(reponsefile) }
   let(:config) { cfgfile = configfilename if defined?(configfilename)  ; cfgfile ||= './spec/support/files/default_config.yaml' ; YAML.load_file( cfgfile ) }
   let(:node_data_hash) { JSON.parse(servicenow('blah'))['servicenow'] }
   let(:expected_response_json) { File.read('./spec/support/files/servicenow_rb_response.json') }
