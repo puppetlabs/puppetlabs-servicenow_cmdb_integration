@@ -10,7 +10,7 @@ require_relative '../../../files/servicenow.rb'
 
 describe 'servicenow' do
   let(:cmdb_api_response_status) { 200 }
-  let(:cmdb_api_response_body) { reponsefile = reponsefilename if defined?(reponsefilename)  ; reponsefile ||= './spec/support/files/valid_cmdb_api_response.json' ; File.read(reponsefile) }
+  let(:cmdb_api_response_body) { responsefile = responsefilename if defined?(responsefilename)  ; responsefile ||= './spec/support/files/valid_cmdb_api_response.json' ; File.read(responsefile) }
   let(:config) { cfgfile = configfilename if defined?(configfilename)  ; cfgfile ||= './spec/support/files/default_config.yaml' ; YAML.load_file( cfgfile ) }
   let(:node_data_hash) { JSON.parse(servicenow('blah'))['servicenow'] }
   let(:expected_response_json) { File.read('./spec/support/files/servicenow_rb_response.json') }
@@ -194,6 +194,13 @@ describe 'servicenow' do
 
     it 'reads the config from /etc/puppetlabs/puppet/servicenow_cmdb.yaml which is with factnameinplaceofcertname as hostname' do     
       expect(servicenow('example').to_s).to include( 'host_name')
+    end
+  end
+  context 'loading ServiceNow config with factnameinplaceofcertname and process a redacted actual servicenow response' do
+    let(:responsefilename) { './spec/support/files/letgnis_cmdb_api_response.json' }
+
+    it 'process a redacted actual servicenow response' do
+      expect(servicenow('eeriedevappls4').to_s).to include( 'eeriedevappls4')
     end
   end
   
