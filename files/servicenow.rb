@@ -208,18 +208,11 @@ CMDATA
     cmdb_record = {}
     servicenow_config['password'] = '==PASSWORD==REDACTED==' unless servicenow_config['password'].nil? || servicenow_config['password'].empty?
     servicenow_config['oauth_token'] = '==PASSWORD==REDACTED==' unless servicenow_config['oauth_token'].nil? || servicenow_config['oauth_token'].empty?
-    cmdb_record[classes_field] = servicenow_config
-    cmdb_record[classes_field]['uri'] = uri
-    cmdb_record[classes_field]['valuetolinkCMBD_used'] = valuetolinkCMBD_used
-    cmdb_record[classes_field]['valuetolinkCMBD_rawdata'] =  valuetolinkCMBD_rawdata
-    cmdb_record[classes_field]['valuetolinkCMBD_cmdata'] =  valuetolinkCMBD_cmdata
-
-    data = JSON.parse(JSON.generate(cmdb_record[classes_field]))
-
-    cmdb_record[classes_field] = {}
-    cmdb_record[classes_field]['simulationhost'] = { 'data' => data }
-
-    cmdb_record[classes_field] = JSON.generate(cmdb_record[classes_field])
+    cmdb_record['servicenow_config'] = servicenow_config
+    cmdb_record['servicenow_config']['uri'] = uri
+    cmdb_record['servicenow_config']['valuetolinkCMBD_used'] = valuetolinkCMBD_used
+    cmdb_record['servicenow_config']['valuetolinkCMBD_rawdata'] =  valuetolinkCMBD_rawdata
+    cmdb_record['servicenow_config']['valuetolinkCMBD_cmdata'] =  valuetolinkCMBD_cmdata
   else
     cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
     response = cmdb_request.response
