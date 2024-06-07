@@ -5,12 +5,10 @@ on:
     branches:
       - "main"
       - "master"
-      - "dev_sooyean"
   pull_request:
     branches:
       - "main"
       - "master"
-      - "dev_sooyean"
   workflow_dispatch:
 
 concurrency:
