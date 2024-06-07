@@ -1,0 +1,23 @@
+name: "CI"
+
+on:
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+      - "dev_sooyean"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Spec:
+    uses: "sooyean-hoo/cat-github-actions/.github/workflows/module_ci.yml@dev_sooyean"
+    secrets: "inherit"
+
+  Acceptance:
+    needs: Spec
+    uses: "sooyean-hoo/cat-github-actions/.github/workflows/module_acceptance.yml@dev_sooyean"
+    secrets: "inherit"
