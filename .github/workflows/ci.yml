@@ -1,6 +1,11 @@
 name: "CI"
 
 on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "dev_sooyean"
   pull_request:
     branches:
       - "main"
