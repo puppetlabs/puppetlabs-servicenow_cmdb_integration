@@ -1,3 +1,4 @@
+# no_param.pp
 class no_param {}
 class single_param(String $param = 'default') {}
 class multiple_params(String $param_one = 'default', String $param_two = 'default') {}
