@@ -7,17 +7,23 @@ require 'hashdiff'
 
 require_relative '../../../files/servicenow.rb'
 
-
 describe 'servicenow' do
   let(:cmdb_api_response_status) { 200 }
-  let(:cmdb_api_response_body) { responsefile = responsefilename if defined?(responsefilename)  ; responsefile ||= './spec/support/files/valid_cmdb_api_response.json' ; File.read(responsefile) }
-  let(:config) { cfgfile = configfilename if defined?(configfilename)  ; cfgfile ||= './spec/support/files/default_config.yaml' ; YAML.load_file( cfgfile ) }
+  let(:cmdb_api_response_body) do
+    responsefile = responsefilename if defined?(responsefilename)
+    responsefile ||= './spec/support/files/valid_cmdb_api_response.json'
+    File.read(responsefile)
+  end
+  let(:config) do
+    cfgfile = configfilename if defined?(configfilename)
+    cfgfile ||= './spec/support/files/default_config.yaml'
+    YAML.load_file(cfgfile)
+  end
   let(:node_data_hash) { JSON.parse(servicenow('blah'))['servicenow'] }
   let(:expected_response_json) { File.read('./spec/support/files/servicenow_rb_response.json') }
 
-
   before(:each) do
-    allow(YAML).to receive(:load_file).with(%r{servicenow_cmdb\.yaml}).and_return( config  )
+    allow(YAML).to receive(:load_file).with(%r{servicenow_cmdb\.yaml}).and_return(config)
 
     response_obj = instance_double('Net::HTTP response obj')
     allow(response_obj).to receive(:code).and_return(cmdb_api_response_status.to_s)
@@ -192,26 +198,26 @@ describe 'servicenow' do
   context 'loading ServiceNow config with factnameinplaceofcertname' do
     let(:configfilename) { './spec/support/files/hostname_config.yaml' }
 
-    it 'reads the config from /etc/puppetlabs/puppet/servicenow_cmdb.yaml which is with factnameinplaceofcertname as hostname' do     
-      expect(servicenow('example').to_s).to include( 'host_name')
+    it 'reads the config from /etc/puppetlabs/puppet/servicenow_cmdb.yaml which is with factnameinplaceofcertname as hostname' do
+      expect(servicenow('example').to_s).to include('host_name')
     end
   end
   context 'loading ServiceNow config with factnameinplaceofcertname and process a redacted actual servicenow response' do
     let(:responsefilename) { './spec/support/files/letgnis_cmdb_api_response.json' }
 
     it 'process a redacted actual servicenow response' do
-      expect(servicenow('eeriedevappls4').to_s).to include( 'eeriedevappls4')
+      expect(servicenow('eeriedevappls4').to_s).to include('eeriedevappls4')
     end
   end
-  
+
   context 'loading ServiceNow config with debug on' do
     let(:configfilename) { './spec/support/files/debug_config.yaml' }
-  
+
     it 'reads the config from /etc/puppetlabs/puppet/servicenow_cmdb.yaml which is with debug on' do
-      expect(servicenow('example').to_s).to include( '=REDACTED=')
+      expect(servicenow('example').to_s).to include('=REDACTED=')
     end
   end
-  
+
   context 'loading ServiceNow config' do
     shared_context 'setup hiera-eyaml' do
       before(:each) do

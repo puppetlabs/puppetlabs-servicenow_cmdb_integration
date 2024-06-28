@@ -171,35 +171,35 @@ def servicenow(certname, config_file = nil)
     end
   end
 
-  valuetolinkCMBD_used=""
-  valuetolinkCMBD_rawdata=""
-  valuetolinkCMBD_cmdata = ""
+  valuetolink_cmdb_used = ''
+  valuetolink_cmdb_rawdata = ''
+  valuetolink_cmdb_cmdata = ''
   if factnameinplaceofcertname
     Puppet.initialize_settings if Puppet.settings[:vardir].nil? || Puppet.settings[:vardir].to_s.empty?
-    valuetolinkCMBD = Facter.value(factnameinplaceofcertname)
-    valuetolinkCMBD_used=factnameinplaceofcertname
+    valuetolink_cmdb = Facter.value(factnameinplaceofcertname)
+    valuetolink_cmdb_used = factnameinplaceofcertname
 
     cmdata = <<-CMDATA
 export PATH=\"${PATH}:/opt/puppetlabs/bin\" ; certname=\"#{certname}\"; q=\"inventory[facts.#{factnameinplaceofcertname}]{certname=\\\"$certname\\\"}\" ; sn=`/opt/puppetlabs/puppet/bin/facter fqdn` ; /opt/puppetlabs/bin/puppet query "$q"  --urls https://${sn}:8081  --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem  --cert /etc/puppetlabs/puppet/ssl/certs/${sn}.pem  --key /etc/puppetlabs/puppet/ssl/private_keys/${sn}.pem
 CMDATA
     begin
-      valuetolinkCMBD_cmdata = cmdata
-      data = ""
-      #data = Facter::Core::Execution.execute("#{cmdata}") unless certname == '__test__'
+      valuetolink_cmdb_cmdata = cmdata
+      data = ''
+      # data = Facter::Core::Execution.execute("#{cmdata}") unless certname == '__test__'
       data = `#{cmdata}` unless certname == '__test__'
-      
-      valuetolinkCMBD_rawdata = data
-      valuetolinkCMBD = JSON.parse(data)[0].values[0] || data || certname # In the event where missing data is encountered, certname is used as fallback
+
+      valuetolink_cmdb_rawdata = data
+      valuetolink_cmdb = JSON.parse(data)[0].values[0] || data || certname # In the event where missing data is encountered, certname is used as fallback
     rescue
-      valuetolinkCMBD = certname
-      valuetolinkCMBD_used='certname'
-    end  
+      valuetolink_cmdb = certname
+      valuetolink_cmdb_used = 'certname'
+    end
   else
-    valuetolinkCMBD = certname
-    valuetolinkCMBD_used='certname'
+    valuetolink_cmdb = certname
+    valuetolink_cmdb_used = 'certname'
   end
 
-  uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{valuetolinkCMBD}&sysparm_display_value=true"
+  uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{valuetolink_cmdb}&sysparm_display_value=true"
 
   cmdb_request = nil
   cmdb_record = nil
@@ -210,9 +210,9 @@ CMDATA
     servicenow_config['oauth_token'] = '==PASSWORD==REDACTED==' unless servicenow_config['oauth_token'].nil? || servicenow_config['oauth_token'].empty?
     cmdb_record['servicenow_config'] = servicenow_config
     cmdb_record['servicenow_config']['uri'] = uri
-    cmdb_record['servicenow_config']['valuetolinkCMBD_used'] = valuetolinkCMBD_used
-    cmdb_record['servicenow_config']['valuetolinkCMBD_rawdata'] =  valuetolinkCMBD_rawdata
-    cmdb_record['servicenow_config']['valuetolinkCMBD_cmdata'] =  valuetolinkCMBD_cmdata
+    cmdb_record['servicenow_config']['valuetolinkCMBD_used'] = valuetolink_cmdb_used
+    cmdb_record['servicenow_config']['valuetolinkCMBD_rawdata'] = valuetolink_cmdb_rawdata
+    cmdb_record['servicenow_config']['valuetolinkCMBD_cmdata'] = valuetolink_cmdb_cmdata
   else
     cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
     response = cmdb_request.response
