@@ -36,7 +36,7 @@ group :development do
   gem "puppet-module-win-dev-r#{minor_version}", '~> 0.4',       require: false, platforms: [:mswin, :mingw, :x64_mingw]
   gem "rspec_junit_formatter",                                   require: false
   gem "hashdiff",                                                require: false
-  gem "pdk", '= 2.7.0',                                          require: false
+  gem "pdk", '= 2.6.1',                                          require: false
 end
 
 puppet_version = ENV['PUPPET_GEM_VERSION']
