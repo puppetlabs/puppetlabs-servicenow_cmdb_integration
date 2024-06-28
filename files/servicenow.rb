@@ -8,6 +8,8 @@ require 'net/http'
 require 'yaml'
 require 'json'
 
+require 'puppet'
+
 # hiera-eyaml requires. Note that newer versions of puppet-agent
 # ship with the hiera-eyaml gem so these should work.
 require 'hiera/backend/eyaml/options'
@@ -126,6 +128,8 @@ def servicenow(certname, config_file = nil)
   certname_field    = servicenow_config['certname_field']
   classes_field     = servicenow_config['classes_field']
   environment_field = servicenow_config['environment_field']
+  debug             = servicenow_config['debug']
+  factnameinplaceofcertname = servicenow_config['factnameinplaceofcertname']
 
   # Since we also support hiera-eyaml encrypted passwords, we'll want to decrypt
   # the password before passing it into the request. In order to do that, we first
@@ -167,17 +171,59 @@ def servicenow(certname, config_file = nil)
     end
   end
 
-  uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
+  valuetolink_cmdb_used = ''
+  valuetolink_cmdb_rawdata = ''
+  valuetolink_cmdb_cmdata = ''
+  if factnameinplaceofcertname
+    Puppet.initialize_settings if Puppet.settings[:vardir].nil? || Puppet.settings[:vardir].to_s.empty?
+    valuetolink_cmdb = Facter.value(factnameinplaceofcertname)
+    valuetolink_cmdb_used = factnameinplaceofcertname
 
-  cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
-  response = cmdb_request.response
-  status = response.code.to_i
-  body = response.body
-  if status >= 400
-    raise "failed to retrieve the CMDB record from #{cmdb_request.uri} (status: #{status}): #{body}"
+    cmdata = <<-CMDATA
+export PATH=\"${PATH}:/opt/puppetlabs/bin\" ; certname=\"#{certname}\"; q=\"inventory[facts.#{factnameinplaceofcertname}]{certname=\\\"$certname\\\"}\" ; sn=`/opt/puppetlabs/puppet/bin/facter fqdn` ; /opt/puppetlabs/bin/puppet query "$q"  --urls https://${sn}:8081  --cacert /etc/puppetlabs/puppet/ssl/certs/ca.pem  --cert /etc/puppetlabs/puppet/ssl/certs/${sn}.pem  --key /etc/puppetlabs/puppet/ssl/private_keys/${sn}.pem
+CMDATA
+    begin
+      valuetolink_cmdb_cmdata = cmdata
+      data = ''
+      # data = Facter::Core::Execution.execute("#{cmdata}") unless certname == '__test__'
+      data = `#{cmdata}` unless certname == '__test__'
+
+      valuetolink_cmdb_rawdata = data
+      valuetolink_cmdb = JSON.parse(data)[0].values[0] || data || certname # In the event where missing data is encountered, certname is used as fallback
+    rescue
+      valuetolink_cmdb = certname
+      valuetolink_cmdb_used = 'certname'
+    end
+  else
+    valuetolink_cmdb = certname
+    valuetolink_cmdb_used = 'certname'
   end
 
-  cmdb_record = JSON.parse(body)['result'][0] || {}
+  uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{valuetolink_cmdb}&sysparm_display_value=true"
+
+  cmdb_request = nil
+  cmdb_record = nil
+
+  if debug
+    cmdb_record = {}
+    servicenow_config['password'] = '==PASSWORD==REDACTED==' unless servicenow_config['password'].nil? || servicenow_config['password'].empty?
+    servicenow_config['oauth_token'] = '==PASSWORD==REDACTED==' unless servicenow_config['oauth_token'].nil? || servicenow_config['oauth_token'].empty?
+    cmdb_record['servicenow_config'] = servicenow_config
+    cmdb_record['servicenow_config']['uri'] = uri
+    cmdb_record['servicenow_config']['valuetolinkCMBD_used'] = valuetolink_cmdb_used
+    cmdb_record['servicenow_config']['valuetolinkCMBD_rawdata'] = valuetolink_cmdb_rawdata
+    cmdb_record['servicenow_config']['valuetolinkCMBD_cmdata'] = valuetolink_cmdb_cmdata
+  else
+    cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
+    response = cmdb_request.response
+    status = response.code.to_i
+    body = response.body
+    if status >= 400
+      raise "failed to retrieve the CMDB record from #{cmdb_request.uri} (status: #{status}): #{body}"
+    end
+
+    cmdb_record = JSON.parse(body)['result'][0] || {}
+  end
   parse_classification_fields(cmdb_record, classes_field, environment_field)
 
   response = {

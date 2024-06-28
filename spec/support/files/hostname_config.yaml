@@ -1,0 +1,10 @@
+---
+instance: dev1234.service-now.com
+user: admin
+password: password
+oauth_token: oauth_token
+table: cmdb_ci
+certname_field: name
+classes_field: u_puppet_classes
+environment_field: u_puppet_environment
+factnameinplaceofcertname: hostname

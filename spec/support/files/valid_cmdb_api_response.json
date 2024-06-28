@@ -21,6 +21,8 @@
       "sys_created_by": "admin",
       "warranty_expiration": "",
       "asset_tag": "",
+      "name": "example",
+      "host_name": "example",
       "fqdn": "example.puppet.com",
       "change_control": "",
       "owned_by": "",

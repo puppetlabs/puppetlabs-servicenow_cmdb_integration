@@ -14,7 +14,9 @@ def location_for(place_or_version, fake_version = nil)
 end
 
 ruby_version_segments = Gem::Version.new(RUBY_VERSION.dup).segments
-minor_version = ruby_version_segments[0..1].join('.')
+#minor_version = ruby_version_segments[0..1].join('.')
+minor_version = '2.7' # Need to fix as this value, if left alone.. the above will have a version which will not get any rubygem
+
 
 group :development do
   gem "fast_gettext", '1.1.0',                                   require: false if Gem::Version.new(RUBY_VERSION.dup) < Gem::Version.new('2.1.0')
@@ -26,14 +28,15 @@ group :development do
   gem "rb-readline", '= 0.5.5',                                  require: false, platforms: [:mswin, :mingw, :x64_mingw]
   # Temporarily setting puppet_litmus version to 0.26.0 or older because new litmus version changes where the inventory file gets
   # created/the name changes to litmus_inventory.yml which is not compatible with the current tests.
-  gem "puppet_litmus", '~> 0.18', '<= 0.26.0',                   require: false, platforms: [:ruby]
+  # gem "puppet_litmus", '~> 0.18', '<= 0.26.0',                 require: false, platforms: [:ruby]
+  gem "puppet_litmus", '~> 0.36.0', '<= 0.36.1',                 require: false, platforms: [:ruby]   # Has to upgrade to 0.36.0, else action will not work, as matrix_from_metadata_v2 will only give proper code at this version
   gem "puppet-module-posix-default-r#{minor_version}", '~> 0.4', require: false, platforms: [:ruby]
   gem "puppet-module-posix-dev-r#{minor_version}", '~> 0.4',     require: false, platforms: [:ruby]
   gem "puppet-module-win-default-r#{minor_version}", '~> 0.4',   require: false, platforms: [:mswin, :mingw, :x64_mingw]
   gem "puppet-module-win-dev-r#{minor_version}", '~> 0.4',       require: false, platforms: [:mswin, :mingw, :x64_mingw]
   gem "rspec_junit_formatter",                                   require: false
   gem "hashdiff",                                                require: false
-  gem "pdk",                                                     require: false
+  gem "pdk", '= 2.6.1',                                          require: false
 end
 
 puppet_version = ENV['PUPPET_GEM_VERSION']

@@ -1,0 +1,29 @@
+name: "CI"
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Spec:
+    uses: "puppetlabs/cat-github-actions/.github/workflows/module_ci.yml@main"
+    secrets: "inherit"
+
+# Not working as VMs all down.
+#   Acceptance:
+#     needs: Spec
+#     uses: "puppetlabs/cat-github-actions/.github/workflows/module_acceptance.yml@main"
+#     secrets: "inherit"
+#     with:
+#       flags: " --exclude-platforms '[\"CentOS-7\",\"CentOS-8\",\"OracleLinux-8\",\"RedHat-7\",\"RedHat-8\",\"Ubuntu-18.04\",\"OracleLinux-7\",\"Scientific-7\",\"SLES-12\"]'" # Only way for Acceptance CI to run in the absence of vmpooler's VMs

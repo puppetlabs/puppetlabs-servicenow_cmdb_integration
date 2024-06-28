@@ -9,8 +9,16 @@ require_relative '../../../files/servicenow.rb'
 
 describe 'servicenow' do
   let(:cmdb_api_response_status) { 200 }
-  let(:cmdb_api_response_body) { File.read('./spec/support/files/valid_cmdb_api_response.json') }
-  let(:config) { YAML.load_file('./spec/support/files/default_config.yaml') }
+  let(:cmdb_api_response_body) do
+    responsefile = responsefilename if defined?(responsefilename)
+    responsefile ||= './spec/support/files/valid_cmdb_api_response.json'
+    File.read(responsefile)
+  end
+  let(:config) do
+    cfgfile = configfilename if defined?(configfilename)
+    cfgfile ||= './spec/support/files/default_config.yaml'
+    YAML.load_file(cfgfile)
+  end
   let(:node_data_hash) { JSON.parse(servicenow('blah'))['servicenow'] }
   let(:expected_response_json) { File.read('./spec/support/files/servicenow_rb_response.json') }
 
@@ -184,6 +192,29 @@ describe 'servicenow' do
 
       expect(ServiceNowRequest).to receive(:new).with(uri, 'Get', nil, 'admin', 'password', 'oauth_token')
       expect { servicenow('example.puppet.com') }.to raise_error(NoMethodError)
+    end
+  end
+
+  context 'loading ServiceNow config with factnameinplaceofcertname' do
+    let(:configfilename) { './spec/support/files/hostname_config.yaml' }
+
+    it 'reads the config from /etc/puppetlabs/puppet/servicenow_cmdb.yaml which is with factnameinplaceofcertname as hostname' do
+      expect(servicenow('example').to_s).to include('host_name')
+    end
+  end
+  context 'loading ServiceNow config with factnameinplaceofcertname and process a redacted actual servicenow response' do
+    let(:responsefilename) { './spec/support/files/letgnis_cmdb_api_response.json' }
+
+    it 'process a redacted actual servicenow response' do
+      expect(servicenow('eeriedevappls4').to_s).to include('eeriedevappls4')
+    end
+  end
+
+  context 'loading ServiceNow config with debug on' do
+    let(:configfilename) { './spec/support/files/debug_config.yaml' }
+
+    it 'reads the config from /etc/puppetlabs/puppet/servicenow_cmdb.yaml which is with debug on' do
+      expect(servicenow('example').to_s).to include('=REDACTED=')
     end
   end
 
