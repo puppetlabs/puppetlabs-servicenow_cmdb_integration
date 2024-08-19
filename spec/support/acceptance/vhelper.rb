@@ -74,7 +74,12 @@ function       installgems(){
           gem install --force  CFPropertyList  -v 2.3.6  ;
         fi ;  
 }
-      
+function      matrix_from_metadata(){
+        matrix_from_metadata_v2  $@ ;
+        cat ${GITHUB_OUTPUT} ${GITHUB_OUTPUT}.tmp ;
+        cat ${GITHUB_OUTPUT} | grep matrix | sed -E 's/matrix=//g' | jq 
+}
+    
 function      preinstallpecommands(){
         sshverbose="-vvvvvv" ;         sshverbose="" ;
         echo ;

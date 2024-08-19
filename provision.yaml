@@ -61,10 +61,31 @@ acceptance_vbox_rhel_8:
 
 
 ##  Cannot find  generic version for OracleLinux-7, SLES-12, Scientific-7,  so  Skipped them in tests.
-## So no 
-## acceptance_vbox_oraclelinux_7
-## acceptance_vbox_sles_12
-## acceptance_vbox_scientificlinux_7
+## So use some other version.
+
+acceptance_vbox_oraclelinux_7:
+  provisioner: vagrant
+  images: ['Rendanic/oraclelinux-7.x' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_sles_12:
+  provisioner: vagrant
+  images: ['idar/sles12' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_scientificlinux_7:
+  provisioner: vagrant
+  images: ['bento/scientificlinux-7.9' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
 
 
 
