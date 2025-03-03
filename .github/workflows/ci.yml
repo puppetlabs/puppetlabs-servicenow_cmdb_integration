@@ -5,11 +5,17 @@ on:
     branches:
       - "main"
       - "master"
+      - "dev_**"
+      - "release/**"
+
   pull_request:
     branches:
       - "main"
       - "master"
+      - "dev_**"
+      - "release/**"
   workflow_dispatch:
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,10 +26,60 @@ jobs:
     uses: "puppetlabs/cat-github-actions/.github/workflows/module_ci.yml@main"
     secrets: "inherit"
 
-# Not working as VMs all down.
-#   Acceptance:
-#     needs: Spec
-#     uses: "puppetlabs/cat-github-actions/.github/workflows/module_acceptance.yml@main"
-#     secrets: "inherit"
-#     with:
-#       flags: " --exclude-platforms '[\"CentOS-7\",\"CentOS-8\",\"OracleLinux-8\",\"RedHat-7\",\"RedHat-8\",\"Ubuntu-18.04\",\"OracleLinux-7\",\"Scientific-7\",\"SLES-12\"]'" # Only way for Acceptance CI to run in the absence of vmpooler's VMs
+# Firstly, I am not the original author of the Acceptance Tests. It took me 
+# weeks to figure out what is the design and the original author's intentions. 
+# Have fun using 'git blame'.
+
+# The original Acceptance Test is using VMPooler... so it run the VMPooler to 
+# get a machine via SSH... as master. Inside the master, you run a mockup 
+# ServiceNow in a docker to test against. All acceptance tests are to be run on 
+# the master. VMPooler is now deprecated. Hence I am using vagrant to replace 
+# the VMPooler VM, using docker as a replacement has proven to be not working, 
+# as it is hard to have a docker within a docker container. In fact, it is 
+# impossible.
+
+# It is also silly to try to change the test to work with 2 containers: too much
+# changes. The original author use litmus to only provision 1 VM: the master. 
+# The rest of the provision, the servicenow, it did it not via Litmus, but it 
+# still want to use it to manage and access the docker. This is where it is 
+# confusing. There is a 'servicenow_instance' in 
+# spec/support/acceptance/helpers.rb, magically created. It is not mentioned at 
+# all in provision.yaml. It is not created by the litmus, but a script. I would 
+# called it, as a way to hack the litmus. Hence it is as good as how litmus stay
+# constant. If there is any future changes to how litmus ingest the inventory. 
+# It may just fail. Good LUCK.
+#
+# Update Sooyean.hoo@perforce : 2024-Sep-01
+# So now only Oracle Linux 7, RedHat Linux 7 and 8, Ubuntu 18.04, 20.04 and 22.04 are
+# part of the testing Matrix. The exclusions and the reason for it are listed below.
+# As an overview, there are a lot difficult in running the mock-up ServiceNow server.
+# It is still run as a docker, but for Ubuntu, they are hosted in the PE Primary server.
+# For others, they are hosted in the Runner. This is because I only managed to get docker to
+# play nice in Ubuntu. And yes the Runner is also of Ubuntu.
+# There are playful manipulation of port forwardings and /etc/hosts used to standardise 
+# the access to both the PE primary server and the mock-up ServiceNow server.
+#
+# Again Good LUCK.
+
+  Acceptance:
+    needs: Spec
+    uses: "sooyean-hoo/cat-github-actions/.github/workflows/module_acceptance_custom.yml@dev_sooyean"
+    secrets: "inherit"
+    with:
+      provision_environment__task: 'valentepuppet:provision_environment__task'
+      install_agent__task: 'valentepuppet:install_agent__task'
+      install_module__task: 'valentepuppet:install_module__task'
+      acceptance__task: 'valentepuppet:acceptance__task'
+      tear_down__task: 'valentepuppet:tear_down__task'
+      matrix_from_metadata: 'bash ./spec/support/acceptance/vhelper.sh exec matrix_from_metadata'
+
+      flags: " --exclude-platforms '[\"RedHat-9\",\"CentOS-7\",\"CentOS-8\",\"Scientific-7\",\"Scientific-8\",\"SLES-12\",\"SLES-15\"]'" # Only way for Acceptance CI to run in the absence of vmpooler's VMs
+        # The following are SKIPPED and for the reason specified.
+        # ,\"CentOS-7\", =  Cannot update any packages, due to EOL
+        # \"CentOS-8\", =  Cannot update any packages, due to EOL
+        # \"Scientific-7\", = Cannot find valid Vagrant Images
+        # \"Scientific-8\", = Cannot find valid Vagrant Images
+        # \"SLES-12\",  = Cannot update any packages, maybe it is too old.
+        # \"SLES-15\"  = Cannot find valid Vagrant Images, there is no connection
+        # ,\"RedHat-9\", =  Server Cannot be up... Have tons of errors.. Failed 9  out of 12 test. All are connection errors
+

@@ -7,6 +7,8 @@ require 'puppet_blacksmith/rake_tasks' if Bundler.rubygems.find_name('puppet-bla
 require 'github_changelog_generator/task' if Bundler.rubygems.find_name('github_changelog_generator').any?
 require 'puppet-strings/tasks' if Bundler.rubygems.find_name('puppet-strings').any?
 
+require_relative './spec/support/acceptance/vhelper'
+
 def changelog_user
   return unless Rake.application.top_level_tasks.include? "changelog"
   returnVal = nil || JSON.load(File.read('metadata.json'))['author']
@@ -110,18 +112,36 @@ namespace :acceptance do
     Rake::Task['litmus:provision_list'].invoke(provision_list)
   end
 
+  desc 'Sets up PE on the master P1 install PE'
+  task :setup_pe_p1 do
+    master.bolt_run_script('spec/support/acceptance/install_pe.sh')
+  end
+
+  desc 'Sets up PE on the master P2 Config PE Hiera'
+  task :setup_pe_p2 do
+    master.run_shell('rm -rf /etc/eyaml')
+    master.bolt_upload_file('spec/support/common/hiera-eyaml', '/etc/eyaml')
+  end
+  
   # TODO: This should be refactored to use the https://github.com/puppetlabs/puppetlabs-peadm
   # module for PE setup
   desc 'Sets up PE on the master'
   task :setup_pe do
-    master.bolt_run_script('spec/support/acceptance/install_pe.sh')
-    # Setup hiera-eyaml config
-    master.run_shell('rm -rf /etc/eyaml')
-    master.bolt_upload_file('spec/support/common/hiera-eyaml', '/etc/eyaml')
+    tasks = [
+      :setup_pe_p1,
+      :setup_pe_p2,
+    ]
+  
+    tasks.each do |task|
+      task = "acceptance:#{task}"
+      puts("Invoking #{task}")
+      Rake::Task[task].invoke
+      puts("")
+    end
   end
 
   desc 'Sets up the ServiceNow instance'
-  task :setup_servicenow_instance, [:instance, :user, :password, :token] do |_, args|
+  task :setup_servicenow_instance, [:instance, :user, :password, :token, :createby] do |_, args|
     instance, user, password, token = args[:instance], args[:user], args[:password], args[:token]
     if instance.nil?
       # Start the mock ServiceNow instance. If an instance has already been started,
@@ -129,7 +149,18 @@ namespace :acceptance do
       # one.
       puts("Starting the mock ServiceNow instance at the master (#{master.uri})")
       master.bolt_upload_file('./spec/support/acceptance/servicenow', '/tmp/servicenow')
+      
+      
+      ## New Code# 
+      master.bolt_upload_file('./spec/support/acceptance/servicenow/Gemfile', '/tmp/servicenow')
+      master.bolt_upload_file('./spec/support/acceptance/servicenow/mock_instance.rb', '/tmp/servicenow')
+      # master.bolt_upload_file('./spec/support/acceptance/start_mock_servicenow_instance.sh', '/tmp/servicenow')
+      
+      ## Old Code# 
       master.bolt_run_script('spec/support/acceptance/start_mock_servicenow_instance.sh')
+      
+      ########## 
+      
       instance, user, password, token = "#{master.uri}:1080", 'mock_user', 'mock_password', 'mock_token'
     else
       # User provided their own ServiceNow instance so make sure that they've also
@@ -143,6 +174,7 @@ namespace :acceptance do
     # Update the inventory file
     puts('Updating the inventory.yaml file with the ServiceNow instance credentials')
     inventory_hash = LitmusHelpers.inventory_hash_from_inventory_file
+    inventory_hash ||= { 'groups' => [] }
     servicenow_group = inventory_hash['groups'].find { |g| g['name'] =~ %r{servicenow} }
     unless servicenow_group
       servicenow_group = { 'name' => 'servicenow_nodes' }
@@ -160,6 +192,7 @@ namespace :acceptance do
       },
       'vars' => {
         'roles' => ['servicenow_instance'],
+        'createby' => args[:createby].to_s,
       }
     }]
     write_to_inventory_file(inventory_hash, 'inventory.yaml')
@@ -191,7 +224,7 @@ namespace :acceptance do
   task :run_tests do
     rspec_command  = 'bundle exec rspec ./spec/acceptance --format documentation'
     rspec_command += ' --format RspecJunitFormatter --out rspec_junit_results.xml' if ENV['CI'] == 'true'
-    puts("Running the tests ...\n")
+    puts("Running the tests on master:#{master.uri}...\n")
     unless system(rspec_command)
       # system returned false which means rspec failed. So exit 1 here
       exit 1
@@ -200,7 +233,7 @@ namespace :acceptance do
 
   desc 'Teardown the setup'
   task :tear_down do
-    puts("Tearing down the test infrastructure ...\n")
+    puts("Tearing down the test infrastructure on master:#{master.uri}...\n")
     Rake::Task['litmus:tear_down'].invoke(master.uri)
     FileUtils.rm_f('inventory.yaml')
   end

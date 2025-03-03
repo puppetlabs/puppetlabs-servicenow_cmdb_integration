@@ -10,7 +10,7 @@
   "gl_account": "",
   "invoice_number": "001",
   "warranty_expiration": "",
-  "asset_tag": "",
+  "asset_tag": "example.puppet.com",
   "fqdn": "example.puppet.com",
   "change_control": "",
   "owned_by": "",

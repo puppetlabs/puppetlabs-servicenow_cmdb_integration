@@ -1,5 +1,199 @@
 acceptance:
+  provisioner: vagrant
+  images: ['generic/ubuntu2204' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+
+
+acceptance_docker_servicenow:
+  provisioner: docker
+  images: ['ruby:2.5-alpine']
+  vars: |
+    roles: ['servicenow_host']
+    docker_run_opts: ["-p 1080:1080","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+
+## A bit Result from Search on https://portal.cloud.hashicorp.com/vagrant/discover?query=generic
+acceptance_vbox_ubuntu_22_04:
+  provisioner: vagrant
+  images: ['generic/ubuntu2204' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_ubuntu_20_04:
+  provisioner: vagrant
+  images: ['generic/ubuntu2004' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_ubuntu_21_04:
+  provisioner: vagrant
+  images: ['generic/ubuntu2104' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_ubuntu_18_04:
+  provisioner: vagrant
+  images: ['generic/ubuntu1804' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+
+
+acceptance_vbox_centos_7:
+  provisioner: vagrant
+  images: ['generic/centos7' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_centos_stream8:
+  provisioner: vagrant
+  images: ['generic/centos8' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+
+acceptance_vbox_rhel_7:
+  provisioner: vagrant
+  images: ['generic/rhel7' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_rhel_8:
+  provisioner: vagrant
+  images: ['generic/rhel8' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_rhel_9:
+  provisioner: vagrant
+  images: ['generic/rhel9' ]   #            ['Nauman3S/rhel9' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+
+##  Cannot find  generic version for OracleLinux-7, SLES-12, Scientific-7,  so  Skipped them in tests.
+## So use some other version.
+
+acceptance_vbox_oraclelinux_7:
+  provisioner: vagrant
+  images: ['generic/oracle7' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_sles_12:
+  provisioner: vagrant
+  images: ['wandisco/sles-12.5-64' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_sles_15:
+  provisioner: vagrant
+  images: ['wandisco/sles15.3-64' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+
+acceptance_vbox_scientificlinux_7:
+  provisioner: vagrant
+  images: ['bento/scientificlinux-7.9' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_oraclelinux_8:
+  provisioner: vagrant
+  images: ['generic/oracle8' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+acceptance_vbox_oraclelinux_9:
+  provisioner: vagrant
+  images: ['generic/oracle9' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+
+acceptance_vbox_scientificlinux_8:
+  provisioner: vagrant
+  images: ['bento/scientificlinux-7.9' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+
+
+# Remove as it is no longer supported from Apr 12, 2021 onwards https://github.com/puppetlabs/provision/pull/164/files
+vmpooler_acceptance:
   provisioner: vmpooler
-  images: ['ubuntu-1804-x86_64']
+  images: ['ubuntu-2004-x86_64']
   vars: |
     roles: ['master']
+
+ddacceptance:
+  provisioner: docker
+  images: ['litmusimage/ubuntu:18.04']
+  vars: |
+    roles: ['master']
+
+# Cannot run cron service.
+duacceptance:
+  provisioner: docker
+  images: ['litmusimage/ubuntu:22.04']
+  vars: |
+    roles: ['master']
+    docker_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+# NO VAGRANT provisioner
+vvacceptance:
+  provisioner: vagrant
+  images: ['generic/ubuntu2204' ]
+  vars: |
+    roles: ['master' ]
+    vagrant_password: 'piepiepiepiepiePIE51!'
+    vagrant_run_opts: ["-p 80:80", "-p 443:443", "-p 5432:5432","-p 8170:8170","-p 8143:8143", "-p 4433:4433","-p 8081:8081","-p 8142:8142", "-p 8140:8140","--privileged", "-v /var/run/docker.sock:/var/run/docker.sock" ]
+
+# acceptance:
+#   provisioner: docker
+#   images: ['litmusimage/centos:stream9']
+#   vars: |
+#     roles: ['master']
+    
+# acceptance:
+#   provisioner: vmpooler
+#   images: ['ubuntu-1804-x86_64']
+#   vars: |
+#     roles: ['master']

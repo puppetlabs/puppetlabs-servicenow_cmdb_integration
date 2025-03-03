@@ -107,7 +107,8 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     it "queries the node's CMDB record using the user-specified certname field" do
       result = trigger_puppet_run(master)
       trusted_json = parse_json(result.stdout, 'trusted_json')
-      expect(trusted_json['external']['servicenow']['asset_tag']).to eql(master.uri)
+      master_uri = master.uri.gsub(%r{:[0-9]+}, '') # clean up the port suffix
+      expect(trusted_json['external']['servicenow']['asset_tag']).to eql(master_uri)
     end
   end
 
@@ -124,7 +125,8 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     it 'still works' do
       result = trigger_puppet_run(master)
       trusted_json = parse_json(result.stdout, 'trusted_json')
-      expect(trusted_json['external']['servicenow']['fqdn']).to eql(master.uri)
+      master_uri = master.uri.gsub(%r{:[0-9]+}, '') # clean up the port suffix
+      expect(trusted_json['external']['servicenow']['fqdn']).to eql(master_uri)
     end
   end
 
@@ -133,7 +135,8 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     # skip the oauth tests if we don't have a token to test with
     servicenow_config = servicenow_instance.bolt_config['remote']
     skip_oauth_tests = false
-    using_mock_instance = servicenow_instance.uri =~ Regexp.new(Regexp.escape(master.uri))
+    master_uri = master.uri.gsub(%r{:[0-9]+}, '') # clean up the port suffix
+    using_mock_instance = servicenow_instance.uri =~ Regexp.new(Regexp.escape(master_uri))
     unless using_mock_instance
       skip_oauth_tests = (servicenow_config['oauth_token']) ? false : true
     end
@@ -153,7 +156,8 @@ describe 'trusted external data ($trusted.external.servicenow hash)' do
     it 'uses the new oauth token', skip: skip_oauth_tests do
       result = trigger_puppet_run(master)
       trusted_json = parse_json(result.stdout, 'trusted_json')
-      expect(trusted_json['external']['servicenow']['fqdn']).to eql(master.uri)
+      master_uri = master.uri.gsub(%r{:[0-9]+}, '') # clean up the port suffix
+      expect(trusted_json['external']['servicenow']['fqdn']).to eql(master_uri)
     end
   end
 

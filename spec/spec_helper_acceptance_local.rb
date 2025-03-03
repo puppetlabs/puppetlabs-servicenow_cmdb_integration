@@ -19,7 +19,32 @@ def set_sitepp_content(manifest)
   master.run_shell("echo '#{content}' > /etc/puppetlabs/code/environments/production/manifests/site.pp")
 end
 
-def trigger_puppet_run(target, acceptable_exit_codes: [0, 2])
+PUPPETAGENTRUNSKIPMSG = 'Run of Puppet configuration client already in progress; skipping'.freeze
+
+# trigger_puppet_run With Failsafes, a version adapted from the below 'trigger_puppet_run_with_failsafe' aka the old 'trigger_puppet_run'
+def trigger_puppet_run(target, acceptable_exit_codes: [0, 2], countdown: 3)
+  result = target.run_shell('puppet agent -t --detailed-exitcodes', expect_failures: true)
+
+  unless acceptable_exit_codes.include?(result[:exit_code])
+    raise "Puppet run failed ( #{result[:exit_code]} )\nstdout: #{result[:stdout]}\nstderr: #{result[:stderr]}" unless result[:exit_code] == 1
+    # FALSE NEGATIVE:
+    # Error Code 1 is Run of Puppet configuration client already in progress; skipping, WE SHOULD WAIT 120secs for 3 times AND TRY AGAIN.
+    sleep 120
+    raise "Puppet run failed ( #{result[:exit_code]} )\nstdout: #{result[:stdout]}\nstderr: #{result[:stderr]}" unless countdown > 0
+    trigger_puppet_run(target, acceptable_exit_codes: acceptable_exit_codes, countdown: countdown - 1)
+  end
+
+  # FALSE NEGATIVE: 'Run of Puppet configuration client already in progress; skipping', WE SHOULD WAIT 120secs for 3 times AND TRY AGAIN.
+  if result[:stdout].match? PUPPETAGENTRUNSKIPMSG
+    if countdown > 0
+      sleep 120
+      result = trigger_puppet_run(target, acceptable_exit_codes: acceptable_exit_codes, countdown: countdown - 1)
+    end
+  end
+  result
+end
+
+def trigger_puppet_run_with_failsafe(target, acceptable_exit_codes: [0, 2])
   result = target.run_shell('puppet agent -t --detailed-exitcodes', expect_failures: true)
   unless acceptable_exit_codes.include?(result[:exit_code])
     raise "Puppet run failed\nstdout: #{result[:stdout]}\nstderr: #{result[:stderr]}"

@@ -24,15 +24,23 @@
 # @param [String] environment_field
 #   The column name of the CMDB field that stores the node's environment. Defaults
 #   to 'u_puppet_environment'.
+# @param [String] snow_uri_erb
+#   URI Template for the ServiceNow API, using field values from the config file. Defaults to 
+#   'https://<%=instance%>/api/now/table/<%=table%>?#<%=certname_field%>=<%=certname%>&sysparm_display_value=true'.
+# @param [String] debug
+#   This enable the debugging more to allow for an indepth looks in to the Servicenow
+#   Integration. i.e. ServiceNow API's URL, userid, but oauth_token and password are redacted.
 class servicenow_cmdb_integration (
   String $instance,
-  Optional[String] $user        = undef,
-  Optional[String] $password    = undef,
-  Optional[String] $oauth_token = undef,
-  String $table                 = 'cmdb_ci',
-  String $certname_field        = 'fqdn',
-  String $classes_field         = 'u_puppet_classes',
-  String $environment_field     = 'u_puppet_environment',
+  Optional[String] $user         = undef,
+  Optional[String] $password     = undef,
+  Optional[String] $oauth_token  = undef,
+  String $table                  = 'cmdb_ci',
+  String $certname_field         = 'fqdn',
+  String $classes_field          = 'u_puppet_classes',
+  String $environment_field      = 'u_puppet_environment',
+  Optional[String] $snow_uri_erb = undef,
+  Optional[String] $debug        = undef,
 ) {
 
   if (($user or $password) and $oauth_token) {
@@ -99,6 +107,8 @@ class servicenow_cmdb_integration (
         certname_field    => $certname_field,
         classes_field     => $classes_field,
         environment_field => $environment_field,
+        snow_uri_erb      => $snow_uri_erb,
+        debug             => $debug,
       }),
     },
   ])

@@ -9,8 +9,8 @@
   "issues_url": "http://github.com/puppetlabs/puppetlabs-servicenow_cmdb_integration/issues",
   "dependencies": [
     {
-      "name": "WhatsARanjit/node_manager",
-      "version_requirement": ">= 0.7.3 < 1.0.0"
+      "name": "puppetlabs-node_manager",
+      "version_requirement": ">= 1.0.0 < 1.0.2"
     },
     {
       "name": "puppetlabs/inifile",
@@ -23,13 +23,6 @@
   ],
   "operatingsystem_support": [
     {
-      "operatingsystem": "CentOS",
-      "operatingsystemrelease": [
-        "7",
-        "8"
-      ]
-    },
-    {
       "operatingsystem": "OracleLinux",
       "operatingsystemrelease": [
         "7",
@@ -40,33 +33,50 @@
       "operatingsystem": "RedHat",
       "operatingsystemrelease": [
         "7",
-        "8"
+        "8",
+        "9"    
       ]
+    },
+    {
+      "operatingsystem": "Ubuntu",
+      "operatingsystemrelease": [
+        "18.04",
+        "20.04",
+        "22.04"
+      ]
+    },
+    {
+      "operatingsystem": "SLES",
+      "operatingsystemrelease": [
+        "12",
+        "15"
+      ]
+    }
+  ],
+  "operatingsystem_notsupport": [
+   {
+      "operatingsystem": "CentOS",
+      "operatingsystemrelease": [
+        "7",
+        "8"
+      ],
+      "eol": "CentOS Stream 8 end of builds is May 31, 2024. CentOS Linux 7 end of life is June 30, 2024. Centos has reach EOL.... All repo are not working. Hence PE dependency cannot be installed."
     },
     {
       "operatingsystem": "Scientific",
       "operatingsystemrelease": [
         "7",
         "8"
-      ]
+      ],
+      "eol": "end of life June 30, 2024"
     },
-    {
-      "operatingsystem": "Ubuntu",
-      "operatingsystemrelease": [
-        "18.04"
-      ]
-    },
-    {
-      "operatingsystem": "SLES",
-      "operatingsystemrelease": [
-        "12"
-      ]
-    }
-  ],
+    
+    {}
+  ],  
   "requirements": [
     {
       "name": "puppet",
-      "version_requirement": ">= 6.14.0 < 7.0.0"
+      "version_requirement": ">= 7.0.0 < 8.0.0"
     }
   ],
   "pdk-version": "1.17.0",

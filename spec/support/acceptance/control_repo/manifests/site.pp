@@ -32,7 +32,7 @@ $classification_hash = {
     }
   }
 }
-$classification_json = inline_template("<%= @classification_hash.to_json %>")
-notify { "classification info":
+$classification_json = inline_template('<%= @classification_hash.to_json %>')
+notify { 'classification info':
   message =>  "<JSON>${classification_json}<JSON>",
 }

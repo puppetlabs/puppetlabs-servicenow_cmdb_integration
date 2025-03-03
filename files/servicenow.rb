@@ -7,6 +7,7 @@ require 'openssl'
 require 'net/http'
 require 'yaml'
 require 'json'
+require 'erb'
 
 # hiera-eyaml requires. Note that newer versions of puppet-agent
 # ship with the hiera-eyaml gem so these should work.
@@ -80,7 +81,7 @@ end
 class ServiceNowRequest
   attr_reader :uri
 
-  def initialize(uri, http_verb, body, user, password, oauth_token)
+  def initialize(uri, http_verb, body, user, password, oauth_token, options = {})
     unless oauth_token || (user && password)
       raise ArgumentError, 'user/password or oauth_token must be specified'
     end
@@ -90,6 +91,8 @@ class ServiceNowRequest
     @user = user
     @password = password
     @oauth_token = oauth_token
+
+    @options = options
   end
 
   def response
@@ -126,6 +129,7 @@ def servicenow(certname, config_file = nil)
   certname_field    = servicenow_config['certname_field']
   classes_field     = servicenow_config['classes_field']
   environment_field = servicenow_config['environment_field']
+  debug             = servicenow_config['debug']
 
   # Since we also support hiera-eyaml encrypted passwords, we'll want to decrypt
   # the password before passing it into the request. In order to do that, we first
@@ -169,15 +173,34 @@ def servicenow(certname, config_file = nil)
 
   uri = "https://#{instance}/api/now/table/#{table}?#{certname_field}=#{certname}&sysparm_display_value=true"
 
-  cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token)
-  response = cmdb_request.response
-  status = response.code.to_i
-  body = response.body
-  if status >= 400
-    raise "failed to retrieve the CMDB record from #{cmdb_request.uri} (status: #{status}): #{body}"
+  if servicenow_config.key?('snow_uri_erb')
+    snow_uri_erb_default = 'https://<%=instance%>/api/now/table/<%=table%>?#<%=certname_field%>=<%=certname%>&sysparm_display_value=true'
+    begin
+      template = ERB.new(servicenow_config['snow_uri_erb'])
+      uri = template.result(binding)
+    rescue
+      template = ERB.new(snow_uri_erb_default)
+      uri = template.result(binding)
+    end
   end
 
-  cmdb_record = JSON.parse(body)['result'][0] || {}
+  if debug.nil? || debug.empty?
+    cmdb_request = ServiceNowRequest.new(uri, 'Get', nil, username, password, oauth_token, { 'certname' => certname }.merge(servicenow_config))
+    response = cmdb_request.response
+    status = response.code.to_i
+    body = response.body
+    if status >= 400
+      raise "failed to retrieve the CMDB record from #{cmdb_request.uri} (status: #{status}): #{body}"
+    end
+
+    cmdb_record = JSON.parse(body)['result'][0] || {}
+  else
+    cmdb_record = {}
+    servicenow_config['password'] = '==PASSWORD==REDACTED==' unless servicenow_config['password'].nil? || servicenow_config['password'].empty?
+    servicenow_config['oauth_token'] = '==PASSWORD==REDACTED==' unless servicenow_config['oauth_token'].nil? || servicenow_config['oauth_token'].empty?
+    cmdb_record['servicenow_config'] = servicenow_config
+    cmdb_record['servicenow_config']['uri'] = uri
+  end
   parse_classification_fields(cmdb_record, classes_field, environment_field)
 
   response = {

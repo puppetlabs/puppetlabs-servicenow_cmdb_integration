@@ -5,7 +5,9 @@
       String $table,
       String $certname_field,
       String $classes_field,
-      String $environment_field
+      String $environment_field,
+      Optional[String] $debug = undef,      
+      Optional[String] $snow_uri_erb
 | -%>
 # managed by Puppet
 ---
@@ -17,3 +19,5 @@ table: <%= $table %>
 certname_field: <%= $certname_field %>
 classes_field: <%= $classes_field %>
 environment_field: <%= $environment_field %>
+snow_uri_erb: <%= $snow_uri_erb %>
+debug: <%= $debug %>

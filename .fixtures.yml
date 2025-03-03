@@ -4,8 +4,8 @@
 fixtures:
   forge_modules:
     node_manager:
-      repo: "WhatsARanjit/node_manager"
-      ref: "0.7.3"
+      repo: "puppetlabs/node_manager"
+      ref: "1.0.1"
     ruby_task_helper:
       repo: "puppetlabs/ruby_task_helper"
       ref: "0.5.1"
@@ -19,7 +19,8 @@ fixtures:
       "repo": "https://github.com/puppetlabs/puppetlabs-translate.git"
     facts: 'https://github.com/puppetlabs/puppetlabs-facts.git'
     puppet_agent: 'https://github.com/puppetlabs/puppetlabs-puppet_agent.git'
-    provision:
-      repo: "https://github.com/puppetlabs/provision.git"
-      ref: "1ddac67b8a6f829c545103185c05291a47e0776e"
     servicenow_tasks: 'https://github.com/puppetlabs/servicenow_tasks.git'
+#     provision:
+#       repo: "https://github.com/puppetlabs/provision.git"
+#       ref: "1ddac67b8a6f829c545103185c05291a47e0776e"
+    provision: 'https://github.com/puppetlabs/provision.git'
