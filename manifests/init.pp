@@ -34,7 +34,6 @@ class servicenow_cmdb_integration (
   String $classes_field         = 'u_puppet_classes',
   String $environment_field     = 'u_puppet_environment',
 ) {
-
   if (($user or $password) and $oauth_token) {
     fail('please specify either user/password or oauth_token not both.')
   }
@@ -58,49 +57,48 @@ class servicenow_cmdb_integration (
   $validate_settings_path = '/tmp/validate_settings.rb'
 
   $resource_dependencies = flatten([
+      file { $external_commands_base:
+        ensure => directory,
+        owner  => 'pe-puppet',
+        group  => 'pe-puppet',
+      },
 
-    file { $external_commands_base:
-      ensure => directory,
-      owner  => 'pe-puppet',
-      group  => 'pe-puppet',
-    },
+      file { "${external_commands_base}/servicenow.rb":
+        ensure  => file,
+        owner   => 'pe-puppet',
+        group   => 'pe-puppet',
+        mode    => '0755',
+        source  => 'puppet:///modules/servicenow_cmdb_integration/servicenow.rb',
+        require => [File[$external_commands_base]],
+      },
 
-    file { "${external_commands_base}/servicenow.rb":
-      ensure  => file,
-      owner   => 'pe-puppet',
-      group   => 'pe-puppet',
-      mode    => '0755',
-      source  => 'puppet:///modules/servicenow_cmdb_integration/servicenow.rb',
-      require => [File[$external_commands_base]],
-    },
+      file { $validate_settings_path:
+        ensure  => file,
+        owner   => 'pe-puppet',
+        group   => 'pe-puppet',
+        mode    => '0755',
+        content => epp( 'servicenow_cmdb_integration/validate_settings.rb.epp', {
+            require_path => "${external_commands_base}/servicenow.rb"
+        }),
+      },
 
-    file { $validate_settings_path:
-      ensure  => file,
-      owner   => 'pe-puppet',
-      group   => 'pe-puppet',
-      mode    => '0755',
-      content => epp( 'servicenow_cmdb_integration/validate_settings.rb.epp', {
-        require_path => "${external_commands_base}/servicenow.rb"
-      }),
-    },
-
-    file { "${puppet_base}/servicenow_cmdb.yaml":
-      ensure       => file,
-      owner        => 'pe-puppet',
-      group        => 'pe-puppet',
-      mode         => '0640',
-      validate_cmd => "${validate_settings_path} %",
-      content      => epp('servicenow_cmdb_integration/servicenow_cmdb.yaml.epp', {
-        instance          => $instance,
-        user              => $user,
-        password          => $password,
-        oauth_token       => $oauth_token,
-        table             => $table,
-        certname_field    => $certname_field,
-        classes_field     => $classes_field,
-        environment_field => $environment_field,
-      }),
-    },
+      file { "${puppet_base}/servicenow_cmdb.yaml":
+        ensure       => file,
+        owner        => 'pe-puppet',
+        group        => 'pe-puppet',
+        mode         => '0640',
+        validate_cmd => "${validate_settings_path} %",
+        content      => epp('servicenow_cmdb_integration/servicenow_cmdb.yaml.epp', {
+            instance          => $instance,
+            user              => $user,
+            password          => $password,
+            oauth_token       => $oauth_token,
+            table             => $table,
+            certname_field    => $certname_field,
+            classes_field     => $classes_field,
+            environment_field => $environment_field,
+        }),
+      },
   ])
 
   ini_setting { 'puppetserver puppetconf trusted external command':
